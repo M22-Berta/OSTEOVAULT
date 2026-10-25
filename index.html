@@ -13,17 +13,17 @@
                 extend: {
                     colors: {
                         brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                            800: '#075985',
-                            900: '#0c4a6e',
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
                         },
-                        darkbg: '#0f172a',
-                        darkcard: '#1e293b',
-                        darkborder: '#334155'
+                        darkbg: '#052e16', /* Verde basilico scuro profondo */
+                        darkcard: '#064e3b',
+                        darkborder: '#065f46'
                     }
                 }
             }
@@ -39,15 +39,148 @@
             background: rgba(0, 0, 0, 0.1);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(14, 165, 233, 0.5);
+            background: rgba(34, 197, 94, 0.5);
             border-radius: 3px;
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-full flex flex-col">
+<body class="bg-[#052e16] text-slate-100 font-sans min-h-full flex flex-col">
 
     <!-- Header / Navbar -->
-    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
+    <header class="bg-[#064e3b]/90 backdrop-blur border-b border-emerald-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="bg-brand-600 p-2 rounded
+                <div class="bg-brand-600 p-2 rounded-lg text-white font-bold text-xl shadow-md">
+                    <i class="fa-solid fa-bone"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-xl tracking-wider text-white">OSTEOVAULT</h1>
+                    <p class="text-xs text-brand-300 font-medium">Repository & Assistant</p>
+                </div>
+            </div>
+            
+            <!-- Barra di ricerca rapida -->
+            <div class="flex-1 max-w-md mx-4">
+                <div class="relative">
+                    <input type="text" id="searchInput" oninput="filterVault()" placeholder="Cerca tecnica, distretto o patologia..." 
+                           class="w-full bg-[#022c22] border border-emerald-700 rounded-full py-1.5 pl-10 pr-4 text-sm text-slate-200 focus:outline-none focus:border-brand-500 transition">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-2.5 text-emerald-400 text-sm"></i>
+                </div>
+            </div>
+
+            <!-- Modalità e Info -->
+            <div class="flex items-center space-x-3">
+                <span class="text-xs bg-emerald-950 text-emerald-300 border border-emerald-700 px-2.5 py-1 rounded-full font-semibold">
+                    v1.1 Basilico Edition
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Colonna Sinistra: Filtri e Database (8 Colonne) -->
+        <section class="lg:col-span-8 flex flex-col space-y-4">
+            
+            <!-- Barra Filtri per Categoria -->
+            <div class="flex items-center space-x-2 overflow-x-auto pb-2 custom-scrollbar">
+                <button onclick="setFilter('all')" class="filter-btn active bg-brand-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shadow-sm">Tutti</button>
+                <button onclick="setFilter('strutturale')" class="filter-btn bg-[#064e3b] hover:bg-emerald-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border border-emerald-700 transition">Strutturale (HVLA)</button>
+                <button onclick="setFilter('viscerale')" class="filter-btn bg-[#064e3b] hover:bg-emerald-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border border-emerald-700 transition">Viscerale</button>
+                <button onclick="setFilter('craniosacrale')" class="filter-btn bg-[#064e3b] hover:bg-emerald-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border border-emerald-700 transition">Cranio-Sacrale</button>
+                <button onclick="setFilter('fasciale')" class="filter-btn bg-[#064e3b] hover:bg-emerald-800 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap border border-emerald-700 transition">Fasciale / MFR</button>
+            </div>
+
+            <!-- Lista Schede Tecniche -->
+            <div id="vaultGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Verrà popolato da Javascript -->
+            </div>
+
+        </section>
+
+        <!-- Colonna Destra: Assistente IA Integrato (4 Colonne) -->
+        <aside class="lg:col-span-4 flex flex-col space-y-4">
+            <div class="bg-[#064e3b]/80 border border-emerald-700/80 rounded-xl p-5 flex flex-col h-full shadow-xl backdrop-blur">
+                <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-emerald-700">
+                    <div class="bg-gradient-to-r from-brand-500 to-emerald-600 p-2 rounded-lg text-white shadow-md">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-slate-100 text-base">Assistente Clinico IA</h2>
+                        <p class="text-xs text-emerald-300">Analisi e suggerimenti di trattamento</p>
+                    </div>
+                </div>
+
+                <!-- Chat / Output IA -->
+                <div id="aiBox" class="flex-1 bg-[#022c22] rounded-lg p-4 border border-emerald-800 custom-scrollbar overflow-y-auto mb-4 text-xs text-slate-300 space-y-3 min-h-[300px] max-h-[500px]">
+                    <div class="bg-[#064e3b] p-3 rounded-lg border border-emerald-700/60 shadow-sm">
+                        <p class="font-semibold text-brand-300 mb-1"><i class="fa-solid fa-circle-info mr-1"></i> Come posso aiutarti?</p>
+                        <p class="text-slate-300">Inserisci i sintomi del paziente o una descrizione clinica qui sotto per ricevere un'analisi ragionata e le tecniche raccomandate.</p>
+                    </div>
+                </div>
+
+                <!-- Form Input Assistente IA -->
+                <div class="space-y-2">
+                    <textarea id="aiInput" rows="3" placeholder="Es. Paziente con lombalgia acuta L4-L5, test di Lasegue positivo a 60°, rigidità psoas..." 
+                              class="w-full bg-[#022c22] border border-emerald-700 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                    <button onclick="processAI()" id="aiBtn" class="w-full bg-brand-600 hover:bg-brand-500 text-white font-semibold py-2 px-4 rounded-lg text-xs transition flex items-center justify-center space-x-2 shadow-md">
+                        <span>Genera Analisi Clinica</span>
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#064e3b] border-t border-emerald-800 py-4 mt-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-emerald-300/70">
+            &copy; 2026 OSTEOVAULT — Repository Tecniche Osteopatiche.
+        </div>
+    </footer>
+
+    <!-- Script di gestione dati e logica dell'interfaccia -->
+    <script>
+        // Database delle Tecniche Osteopatiche
+        const database = [
+            {
+                id: 1,
+                titolo: "HVLA Rachide Lombare (Roll Lombare)",
+                categoria: "strutturale",
+                distretto: "Lombare (L1-L5)",
+                descrizione: "Tecnica ad alta velocità e piccola ampiezza per disfunzioni in FRS o ERS del tratto lombare.",
+                posizionamento: "Decubito laterale con lato disfunzionale rivolto verso l'alto.",
+                indicazioni: "Restrizione di mobilità articolare, lombalgia meccanica non discogena."
+            },
+            {
+                id: 2,
+                titolo: "Rilascio Miofasciale Grande Psoas",
+                categoria: "fasciale",
+                distretto: "Bacino / Anca",
+                descrizione: "Tecnica ad energia muscolare / MFR per inibire l'ipertono dello psoas.",
+                posizionamento: "Paziente supino, anca flessa e leggermente extraruotata.",
+                indicazioni: "Lombalgia, rigidità in estensione d'anca, atitudine scoliotica antalgica."
+            },
+            {
+                id: 3,
+                titolo: "Inibizione dei Punti Suboccipitali",
+                categoria: "craniosacrale",
+                distretto: "Cranio-Cervicale (C0-C1)",
+                descrizione: "Pressione continua e dolce sui muscoli suboccipitali per favorire il rilassamento del tratto C0-C1.",
+                posizionamento: "Paziente supino, operatore alla testa con polpastrelli nella fossa suboccipitale.",
+                indicazioni: "Cefalea tensiva, rigidità cervicale alta, ipertono simpatico."
+            },
+            {
+                id: 4,
+                titolo: "Pompaggio Vescicale / Cupola Vescicale",
+                categoria: "viscerale",
+                distretto: "Sinfisi Pubica / Pelvi",
+                descrizione: "Lavoro di mobilizzazione dolce sui legamenti sospensori e sulla fascia vescicale.",
+                posizionamento: "Paziente supino con gambe flesse.",
+                indicazioni: "Tensioni pelviche, esiti cicatriziali basso addome, congestione venosa pelvica."
+            }
+        ];
+
+        let currentFilter =
