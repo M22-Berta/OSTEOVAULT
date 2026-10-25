@@ -4,861 +4,730 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Divinity & History Clash 3D - Ultimate Edition</title>
+    <title>Divine & Historical Arena - Tekken Style 3D</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Libreria Three.js per la grafica 3D e le armi vettoriali -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Cinzel:wght@700&display=swap');
-        
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@600;700&display=swap');
         body {
-            font-family: 'Cinzel', serif;
-            background-color: #030303;
-            color: #ffffff;
-            overflow-x: hidden;
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #0b0f19;
+            color: #f3f4f6;
+            overflow: hidden;
             user-select: none;
         }
-
-        .arcade-font {
-            font-family: 'Press Start 2P', monospace;
+        .cinzel {
+            font-family: 'Cinzel', serif;
         }
-
-        .neon-glow {
-            text-shadow: 0 0 12px rgba(234, 179, 8, 0.9), 0 0 25px rgba(234, 179, 8, 0.6);
+        /* Custom scrollbar and glow effects */
+        .glow-gold {
+            text-shadow: 0 0 15px rgba(234, 179, 8, 0.7);
         }
-
-        /* Effetto Scanlines e Vignetta Arcade */
-        .scanlines {
-            background: linear-gradient(
-                rgba(18, 16, 16, 0) 50%, 
-                rgba(0, 0, 0, 0.2) 50%
-            ), linear-gradient(
-                90deg,
-                rgba(255, 0, 0, 0.02),
-                rgba(0, 255, 0, 0.01),
-                rgba(0, 0, 255, 0.02)
-            );
-            background-size: 100% 4px, 6px 100%;
-            pointer-events: none;
+        .glow-red {
+            text-shadow: 0 0 15px rgba(239, 68, 68, 0.7);
         }
-
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.85; transform: scale(1.02); }
+        .card-glow:hover {
+            box-shadow: 0 0 25px rgba(234, 179, 8, 0.4);
+            border-color: rgba(234, 179, 8, 0.8);
         }
-        .animate-pulse-slow {
-            animation: pulse-slow 3s infinite ease-in-out;
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between items-center relative">
+<body class="relative w-screen h-screen">
 
-    <!-- Sovrapposizione CRT Arcade -->
-    <div class="absolute inset-0 z-50 scanlines pointer-events-none"></div>
-
-    <!-- Schermata Principale -->
-    <div id="menu-screen" class="w-full h-screen flex flex-col justify-center items-center relative z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neutral-900 via-stone-950 to-black">
-        <div class="absolute inset-0 opacity-25 bg-[url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=1920')] bg-cover bg-center"></div>
-        <div class="relative z-10 text-center px-4 max-w-4xl mx-auto">
-            <h2 class="text-amber-500 text-sm md:text-xl tracking-widest arcade-font mb-3 uppercase">Simulatore 3D Realistico</h2>
-            <h1 class="text-4xl md:text-7xl font-black mb-6 tracking-wider uppercase neon-glow text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-500 to-red-600">
-                Divinity & History Clash 3D
+    <!-- MAIN MENU SCREEN -->
+    <div id="main-menu" class="absolute inset-0 z-50 flex flex-col items-center justify-between p-8 bg-gradient-to-b from-gray-950 via-slate-950 to-black">
+        <div class="text-center mt-6">
+            <h1 class="cinzel text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-red-600 glow-gold tracking-wider">
+                DIVINE ARENA
             </h1>
-            <p class="text-stone-300 text-sm md:text-lg mb-10 max-w-2xl mx-auto font-sans leading-relaxed">
-                Combattenti 3D umani e dinamici dotati di armi leggendarie esclusive. Scegli la tua fazione e domina l'arena tridimensionale!
-            </p>
-            <div class="flex flex-col sm:flex-row gap-5 justify-center items-center">
-                <button onclick="openArenaSelect('pvp')" class="px-8 py-4 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-black font-extrabold rounded-xl shadow-2xl transition transform hover:scale-105 arcade-font text-xs md:text-sm border-2 border-amber-300 cursor-pointer">
-                    ⚔️ 1 GIOCATORE (VS CPU)
-                </button>
-                <button onclick="openArenaSelect('local')" class="px-8 py-4 bg-gradient-to-r from-red-700 to-orange-700 hover:from-red-600 hover:to-orange-600 text-white font-extrabold rounded-xl shadow-2xl transition transform hover:scale-105 arcade-font text-xs md:text-sm border-2 border-red-400 cursor-pointer">
-                    👥 2 GIOCATORI LOCALE
-                </button>
-            </div>
+            <p class="text-slate-400 text-lg mt-2 tracking-widest uppercase">Legends & Deities Clash in 3D</p>
         </div>
-        <div class="absolute bottom-6 text-stone-500 text-xs arcade-font">
-            Three.js 3D Engine • Armi Personalizzate Attive
-        </div>
-    </div>
 
-    <!-- Schermata Selezione Arena -->
-    <div id="arena-select-screen" class="w-full h-screen hidden flex-col justify-center items-center p-4 relative z-10 bg-neutral-950">
-        <div class="max-w-4xl w-full text-center">
-            <h2 class="text-3xl md:text-4xl font-black text-amber-400 arcade-font mb-4 uppercase">SCEGLI L'ARENA DI BATTAGLIA</h2>
-            <p class="text-stone-400 text-sm mb-8">Ogni scenario possiede un'atmosfera e un'illuminazione tridimensionale unica.</p>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div onclick="selectArena('heaven')" class="bg-neutral-900 border-2 border-amber-500/50 hover:border-amber-400 p-6 rounded-2xl cursor-pointer transition transform hover:scale-105 shadow-xl">
-                    <h3 class="text-xl font-bold text-amber-400 mb-2">I Cancelli del Paradiso</h3>
-                    <p class="text-xs text-stone-400">Marmo dorato, colonne celesti e luce divina diffusa.</p>
-                </div>
-                <div onclick="selectArena('hell')" class="bg-neutral-900 border-2 border-red-500/50 hover:border-red-400 p-6 rounded-2xl cursor-pointer transition transform hover:scale-105 shadow-xl">
-                    <h3 class="text-xl font-bold text-red-500 mb-2">Gli Abissi dell'Inferno</h3>
-                    <p class="text-xs text-stone-400">Lava incandescente, catene roventi e cieli scarlatti.</p>
-                </div>
-                <div onclick="selectArena('colosseum')" class="bg-neutral-900 border-2 border-orange-500/50 hover:border-orange-400 p-6 rounded-2xl cursor-pointer transition transform hover:scale-105 shadow-xl">
-                    <h3 class="text-xl font-bold text-orange-400 mb-2">Colosseo Romano</h3>
-                    <p class="text-xs text-stone-400">Arena storica sabbiosa circondata da gradinate di pietra antica.</p>
-                </div>
-            </div>
-            <button onclick="backToMenu()" class="text-stone-400 hover:text-white text-xs underline cursor-pointer">Indietro al Menu</button>
+        <div class="flex flex-col gap-4 w-full max-w-md">
+            <button onclick="goToCharacterSelect('P1_VS_CPU')" class="cinzel py-4 px-6 text-xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-white rounded-xl shadow-lg shadow-amber-900/40 transition transform hover:scale-105 border border-amber-400/30">
+                1 Giocatore vs CPU
+            </button>
+            <button onclick="goToCharacterSelect('P1_VS_P2')" class="cinzel py-4 px-6 text-xl font-bold bg-gradient-to-r from-red-700 to-rose-800 hover:from-red-600 hover:to-rose-700 text-white rounded-xl shadow-lg shadow-red-900/40 transition transform hover:scale-105 border border-red-500/30">
+                2 Giocatori (Locale)
+            </button>
+            <button onclick="showLoreModal()" class="cinzel py-3 px-6 text-lg font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition border border-slate-700">
+                Codex & Statistiche
+            </button>
+        </div>
+
+        <div class="text-xs text-slate-500 tracking-wider">
+            TEKKEN 3D ENGINE v3.4 - RENDERING STABLE
         </div>
     </div>
 
-    <!-- Schermata Selezione Personaggi -->
-    <div id="char-select-screen" class="w-full min-h-screen hidden flex-col justify-between items-center p-4 md:p-8 relative z-10 bg-neutral-950">
-        <div class="w-full max-w-7xl mx-auto flex flex-col items-center">
-            <h2 id="select-title" class="text-2xl md:text-4xl font-black neon-glow text-amber-400 text-center mb-2 uppercase tracking-wide">
-                SELEZIONA IL TUO COMBATTENTE (GIOCATORE 1)
-            </h2>
-            <p id="select-subtitle" class="text-stone-400 text-xs md:text-sm mb-6 text-center">Ogni lottatore possiede armi uniche 3D e statistiche rigorosamente bilanciate.</p>
+    <!-- CHARACTER SELECTION SCREEN -->
+    <div id="char-select-screen" class="absolute inset-0 z-40 hidden flex flex-col justify-between p-6 bg-slate-950 bg-opacity-95 backdrop-blur-md">
+        <div class="flex justify-between items-center">
+            <h2 id="select-title" class="cinzel text-3xl font-bold text-yellow-500 glow-gold">SELEZIONA IL TUO COMBATTENTE</h2>
+            <button onclick="backToMenu()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-bold border border-slate-700 transition">Indietro</button>
+        </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 w-full mb-6" id="character-grid">
-                <!-- Generato via JS -->
-            </div>
+        <!-- Roster Grid -->
+        <div id="roster-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 overflow-y-auto max-h-[65vh] p-2">
+            <!-- Dynamically populated roster -->
+        </div>
 
-            <!-- Pannello Statistiche e Armi -->
-            <div class="w-full bg-neutral-900 border-2 border-amber-500/40 rounded-2xl p-5 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                <div class="flex items-center gap-4">
-                    <img id="preview-avatar" src="" alt="Avatar" class="w-20 h-20 md:w-28 md:h-28 object-cover rounded-xl border-2 border-amber-400 shadow-lg bg-neutral-800">
-                    <div>
-                        <h3 id="preview-name" class="text-xl font-bold text-amber-400">Nome</h3>
-                        <p id="preview-title" class="text-xs text-stone-400 italic mb-1">Titolo</p>
-                        <p id="preview-weapon" class="text-xs text-orange-400 font-bold mb-2">⚔️ Arma: -</p>
-                        <span id="preview-tier" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase">Tier</span>
-                    </div>
-                </div>
-
-                <div class="space-y-2">
-                    <h4 class="text-xs font-bold text-amber-300 uppercase arcade-font">Statistiche (Totale Verificato)</h4>
-                    <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="bg-neutral-800 p-1.5 rounded border border-neutral-700">❤️ HP: <span id="stat-hp" class="font-bold text-red-400">0</span></div>
-                        <div class="bg-neutral-800 p-1.5 rounded border border-neutral-700">⚡ Agilità: <span id="stat-agi" class="font-bold text-blue-400">0</span></div>
-                        <div class="bg-neutral-800 p-1.5 rounded border border-neutral-700">🔮 Magia: <span id="stat-mag" class="font-bold text-purple-400">0</span></div>
-                        <div class="bg-neutral-800 p-1.5 rounded border border-neutral-700">💪 Forza: <span id="stat-str" class="font-bold text-orange-400">0</span></div>
-                        <div class="bg-neutral-800 p-1.5 rounded border border-neutral-700">🛡️ Resistenza: <span id="stat-res" class="font-bold text-emerald-400">0</span></div>
-                        <div class="bg-neutral-800 p-1.5 rounded border border-neutral-700">⏱️ Cooldown: <span id="stat-cd" class="font-bold text-yellow-400">0s</span></div>
-                    </div>
-                    <div class="text-right text-xs text-stone-400">Totale: <span id="stat-total" class="font-bold text-amber-400">0</span></div>
-                </div>
-
-                <div class="space-y-3">
-                    <h4 class="text-xs font-bold text-amber-300 uppercase arcade-font">Mosse Esclusive</h4>
-                    <div class="text-xs space-y-1 bg-neutral-800 p-2.5 rounded border border-neutral-700">
-                        <p>🥊 <strong class="text-stone-200">Base 1:</strong> <span id="move-b1">-</span></p>
-                        <p>🦵 <strong class="text-stone-200">Base 2:</strong> <span id="move-b2">-</span></p>
-                        <p>✨ <strong class="text-amber-400">Speciale 1:</strong> <span id="move-s1">-</span></p>
-                        <p>💥 <strong class="text-red-400">Speciale 2:</strong> <span id="move-s2">-</span></p>
-                    </div>
-                    <button id="confirm-select-btn" onclick="confirmCharacterSelection()" class="w-full py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-black font-extrabold rounded-xl shadow-lg transition arcade-font text-xs cursor-pointer">
-                        CONFERMA COMBATTENTE
-                    </button>
+        <!-- Selected Stats Preview Footer -->
+        <div id="fighter-preview-footer" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4">
+                <div id="preview-avatar" class="w-16 h-16 rounded-xl bg-slate-800 border border-amber-500 flex items-center justify-center text-2xl font-bold cinzel text-amber-400">?</div>
+                <div>
+                    <h3 id="preview-name" class="cinzel text-xl font-bold text-white">Seleziona un lottatore</h3>
+                    <p id="preview-title" class="text-xs text-slate-400">Arma: Nessuna</p>
                 </div>
             </div>
+            <div id="preview-stats" class="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center text-xs">
+                <!-- Stat bars -->
+            </div>
+            <button id="start-match-btn" onclick="startMatch()" disabled class="cinzel px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-700 opacity-50 cursor-not-allowed text-white font-bold rounded-xl shadow-lg transition">
+                COMBATTI
+            </button>
         </div>
     </div>
 
-    <!-- Schermata di Combattimento 3D (Three.js Canvas) -->
-    <div id="battle-screen" class="w-full h-screen hidden flex-col justify-between items-center relative z-10 bg-black overflow-hidden">
-        
-        <!-- HUD Superiore -->
-        <div class="w-full max-w-6xl p-4 flex justify-between items-center bg-gradient-to-b from-neutral-900/90 to-transparent z-20">
-            <!-- P1 HUD -->
-            <div class="flex flex-col w-5/12">
-                <div class="flex justify-between items-center mb-1">
-                    <span id="hud-p1-name" class="font-bold text-amber-400 text-base md:text-lg">P1</span>
-                    <span id="hud-p1-hp-text" class="text-xs text-stone-300 font-mono">1000/1000</span>
+    <!-- 3D GAMEPLAY HUD & OVERLAY -->
+    <div id="game-ui" class="absolute inset-0 z-30 pointer-events-none hidden flex flex-col justify-between p-6">
+        <!-- Top HUD -->
+        <div class="flex justify-between items-center w-full">
+            <!-- P1 Health & Info -->
+            <div class="flex flex-col w-2/5">
+                <div class="flex justify-between items-end mb-1">
+                    <span id="p1-name-hud" class="cinzel font-bold text-lg text-yellow-400">Giocatore 1</span>
+                    <span id="p1-hp-text" class="text-sm font-bold text-slate-200">3000 / 3000</span>
                 </div>
-                <div class="w-full bg-neutral-800 h-5 rounded-full overflow-hidden border-2 border-stone-700 p-0.5">
-                    <div id="hud-p1-hp-bar" class="h-full bg-gradient-to-r from-red-600 to-amber-500 rounded-full transition-all duration-200" style="width: 100%;"></div>
+                <div class="w-full bg-slate-900 h-6 rounded-lg border border-slate-700 overflow-hidden p-0.5">
+                    <div id="p1-hp-bar" class="h-full bg-gradient-to-r from-amber-600 to-yellow-400 rounded-md transition-all duration-150" style="width: 100%;"></div>
                 </div>
-                <div class="flex gap-2 mt-1 items-center">
-                    <span class="text-[9px] text-stone-400 uppercase">Speciale:</span>
-                    <div class="flex-1 bg-neutral-800 h-2 rounded-full overflow-hidden border border-neutral-700">
-                        <div id="hud-p1-sp-bar" class="h-full bg-blue-500 transition-all duration-100" style="width: 0%;"></div>
-                    </div>
+                <!-- Special Cooldown Bar -->
+                <div class="w-full bg-slate-900 h-2 rounded-full mt-1 overflow-hidden border border-slate-800">
+                    <div id="p1-special-bar" class="h-full bg-blue-500 rounded-full transition-all duration-100" style="width: 0%;"></div>
                 </div>
             </div>
 
-            <!-- Timer -->
+            <!-- Timer & Round -->
             <div class="flex flex-col items-center">
-                <div id="hud-timer" class="text-2xl md:text-4xl font-black arcade-font text-amber-500 neon-glow">99</div>
-                <span class="text-[9px] text-stone-400 uppercase tracking-widest">3D ARENA</span>
+                <div id="match-timer" class="cinzel text-4xl font-black text-yellow-400 glow-gold">99</div>
+                <div id="round-indicator" class="text-xs font-bold text-slate-400 tracking-widest uppercase">Round 1</div>
             </div>
 
-            <!-- P2 HUD -->
-            <div class="flex flex-col w-5/12 items-end">
-                <div class="flex justify-between items-center mb-1 w-full flex-row-reverse">
-                    <span id="hud-p2-name" class="font-bold text-red-400 text-base md:text-lg">P2</span>
-                    <span id="hud-p2-hp-text" class="text-xs text-stone-300 font-mono">1000/1000</span>
+            <!-- P2 Health & Info -->
+            <div class="flex flex-col w-2/5 items-end">
+                <div class="flex justify-between items-end mb-1 w-full flex-row-reverse">
+                    <span id="p2-name-hud" class="cinzel font-bold text-lg text-red-500">Giocatore 2</span>
+                    <span id="p2-hp-text" class="text-sm font-bold text-slate-200">1500 / 1500</span>
                 </div>
-                <div class="w-full bg-neutral-800 h-5 rounded-full overflow-hidden border-2 border-stone-700 p-0.5 flex flex-row-reverse">
-                    <div id="hud-p2-hp-bar" class="h-full bg-gradient-to-l from-red-600 to-amber-500 rounded-full transition-all duration-200" style="width: 100%;"></div>
+                <div class="w-full bg-slate-900 h-6 rounded-lg border border-slate-700 overflow-hidden p-0.5 flex flex-row-reverse">
+                    <div id="p2-hp-bar" class="h-full bg-gradient-to-l from-red-600 to-rose-500 rounded-md transition-all duration-150" style="width: 100%;"></div>
                 </div>
-                <div class="flex gap-2 mt-1 items-center flex-row-reverse w-full">
-                    <span class="text-[9px] text-stone-400 uppercase">Speciale:</span>
-                    <div class="flex-1 bg-neutral-800 h-2 rounded-full overflow-hidden border border-neutral-700 flex flex-row-reverse">
-                        <div id="hud-p2-sp-bar" class="h-full bg-blue-500 transition-all duration-100" style="width: 0%;"></div>
-                    </div>
+                <!-- Special Cooldown Bar -->
+                <div class="w-full bg-slate-900 h-2 rounded-full mt-1 overflow-hidden border border-slate-800 flex flex-row-reverse">
+                    <div id="p2-special-bar" class="h-full bg-blue-500 rounded-full transition-all duration-100" style="width: 0%;"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Canvas Three.js 3D -->
-        <div id="canvas-container" class="relative w-full flex-1 flex justify-center items-center overflow-hidden">
-            <!-- Annunciatore 3D -->
-            <div id="announcer-box" class="absolute inset-0 flex justify-center items-center pointer-events-none z-30 hidden">
-                <h2 id="announcer-text" class="text-5xl md:text-7xl font-black arcade-font text-amber-400 neon-glow transform scale-0 transition-transform duration-300 text-center">FIGHT!</h2>
-            </div>
-            <!-- Log Azioni -->
-            <div id="action-log" class="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/80 border border-amber-500/60 px-4 py-2 rounded-xl text-xs md:text-sm font-semibold text-amber-300 tracking-wider z-35 text-center pointer-events-none transition-opacity duration-300 opacity-0 shadow-2xl">
-                Azione!
-            </div>
+        <!-- Center Announcer Text -->
+        <div id="announcer-box" class="self-center text-center">
+            <h2 id="announcer-text" class="cinzel text-5xl md:text-6xl font-black text-yellow-400 glow-gold tracking-widest animate-pulse">READY?</h2>
         </div>
 
-        <!-- Comandi Inferiori -->
-        <div class="w-full bg-neutral-900/90 border-t border-neutral-800 p-3 flex flex-wrap justify-between items-center text-xs text-stone-400 z-20">
+        <!-- Bottom Controls Guide -->
+        <div class="flex justify-between items-end text-xs text-slate-400 bg-slate-950/80 p-3 rounded-xl border border-slate-800 pointer-events-auto">
             <div>
-                <strong class="text-amber-400">P1:</strong> W/A/S/D = Movimento | F = Pugno Arma | G = Calcio | H = Spec 1 | J = Spec 2
+                <strong class="text-amber-400">P1 (WASD + F/G/H):</strong> Muovi (A/D), Salta (W), Parata (S), Pugno (F), Calcio (G), Speciale (H)
+            </div>
+            <div>
+                <button onclick="returnToMenu()" class="px-3 py-1 bg-red-900/60 hover:bg-red-800 text-red-200 rounded font-bold border border-red-700 transition">Abbandona</button>
             </div>
             <div id="p2-controls-hint">
-                <strong class="text-red-400">P2:</strong> Frecce = Movimento | 1 = Pugno | 2 = Calcio | 3 = Spec 1 | 4 = Spec 2
-            </div>
-            <div>
-                <button onclick="returnToMenu()" class="text-stone-300 hover:text-white underline cursor-pointer">Abbandona</button>
+                <strong class="text-red-400">P2 (Frecce + 1/2/3):</strong> Muovi (Frecce), Parata (Giù), Pugno (1), Calcio (2), Speciale (3)
             </div>
         </div>
     </div>
 
-    <!-- Schermata Fine Partita -->
-    <div id="gameover-screen" class="w-full h-screen hidden flex-col justify-center items-center relative z-40 bg-black/95">
-        <div class="text-center p-8 bg-neutral-900 border-2 border-amber-500 rounded-2xl shadow-2xl max-w-md w-full mx-4">
-            <h3 class="text-stone-400 text-xs arcade-font mb-2">VERDETTO DELL'ARENA</h3>
-            <h1 id="winner-title" class="text-3xl md:text-5xl font-black neon-glow text-amber-400 mb-6 uppercase">VITTORIA!</h1>
-            <p id="winner-desc" class="text-stone-300 text-sm mb-8">Il destino del mondo è stato scritto.</p>
+    <!-- GAME OVER / WINNER MODAL -->
+    <div id="game-over-modal" class="absolute inset-0 z-50 hidden flex flex-col items-center justify-center bg-black/80 backdrop-blur-md">
+        <div class="bg-slate-900 border border-amber-500/50 p-8 rounded-3xl text-center max-w-md w-full shadow-2xl shadow-amber-500/20">
+            <h3 id="winner-title" class="cinzel text-4xl font-black text-yellow-400 glow-gold mb-2">VITTORIA!</h3>
+            <p id="winner-subtitle" class="text-slate-300 mb-6">Il combattente divino ha prevalso.</p>
             <div class="flex gap-4 justify-center">
-                <button onclick="restartBattle()" class="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-xl arcade-font text-xs cursor-pointer">
-                    RIGIOCA
-                </button>
-                <button onclick="returnToMenu()" class="px-6 py-3 bg-neutral-800 hover:bg-neutral-700 text-white font-extrabold rounded-xl arcade-font text-xs cursor-pointer">
-                    MENU
-                </button>
+                <button onclick="restartMatch()" class="cinzel px-6 py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition">Rivincita</button>
+                <button onclick="returnToMenu()" class="cinzel px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl transition border border-slate-700">Menu Principale</button>
             </div>
         </div>
     </div>
 
-    <!-- Script di Gioco e Motore 3D Three.js -->
+    <!-- LORE MODAL -->
+    <div id="lore-modal" class="absolute inset-0 z-50 hidden flex flex-col items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        <div class="bg-slate-900 border border-slate-700 p-6 rounded-3xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <h3 class="cinzel text-2xl font-bold text-yellow-400 mb-4">CODEX DIVINO & STATISTICHE</h3>
+            <div class="space-y-4 text-sm text-slate-300">
+                <p>Benvenuto nell'arena definitiva in 3D. Ciascun personaggio possiede statistiche uniche (HP, Agilità, Cooldown, Magia, Forza, Resistenza allo Stagger) e armi procedurali uniche.</p>
+                <ul class="list-disc pl-5 space-y-2">
+                    <li><strong class="text-yellow-400">Dio (HP 3000):</strong> Onnipotente creatore, infligge danni colossali.</li>
+                    <li><strong class="text-red-400">Satana (HP 2500):</strong> Signore degli inferi, agile e distruttivo.</li>
+                    <li><strong class="text-amber-400">Gesù / Hitler / Attila / Vlad:</strong> Guerrieri storici e mitologici con bilanciamento totale a 1000 punti distribuiti.</li>
+                </ul>
+            </div>
+            <div class="mt-6 text-right">
+                <button onclick="closeLoreModal()" class="cinzel px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl border border-slate-600">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- THREE.JS GAME SCRIPT -->
     <script>
-        // Roster Completo con Statistiche Verificate e Armi Uniche
-        const characters = [
-            {
-                id: 'dio',
-                name: 'Dio',
-                title: 'Onnipotente Creatore',
-                tier: 'Divinità Suprema',
-                tierColor: 'bg-amber-500/20 text-amber-400 border-amber-500',
-                avatar: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 1200, agi: 350, cooldown: 3, magic: 650, strength: 500, stagger: 300 }, // Totale = 3000
-                total: 3000,
-                color: 0xffd700,
-                weaponName: 'Scettro di Luce Suprema',
-                moves: { base1: 'Divina Punizione', base2: 'Calcio dei Cieli', spec1: 'Giudizio Universale', spec2: 'Big Bang Primordiale' }
-            },
-            {
-                id: 'satana',
-                name: 'Satana',
-                title: 'Signore degli Inferi',
-                tier: 'Entità Infernale',
-                tierColor: 'bg-red-500/20 text-red-500 border-red-500',
-                avatar: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 1100, agi: 400, cooldown: 3, magic: 550, strength: 300, stagger: 150 }, // Totale = 2500
-                total: 2500,
-                color: 0xcc0000,
-                weaponName: 'Falce Infernale & Catene di Zolfo',
-                moves: { base1: 'Artiglio Infernale', base2: 'Calcio di Fiamme', spec1: 'Pioggia di Zolfo', spec2: 'Oblio delle Anime' }
-            },
-            {
-                id: 'gesu',
-                name: 'Gesù',
-                title: 'Il Messia',
-                tier: 'Divinità / Santo',
-                tierColor: 'bg-blue-500/20 text-blue-400 border-blue-500',
-                avatar: 'https://images.unsplash.com/photo-1548625361-1699318a6190?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 600, agi: 250, cooldown: 4, magic: 350, strength: 200, stagger: 100 }, // Totale = 1500
-                total: 1500,
-                color: 0x3b82f6,
-                weaponName: 'Corona di Spine & Croce di Luce',
-                moves: { base1: 'Palmo di Misericordia', base2: 'Calcio dei Pani e Pesci', spec1: 'Raggio Santo', spec2: 'Resurrezione Potente' }
-            },
-            {
-                id: 'hitler',
-                name: 'Adolf Hitler',
-                title: 'Dittatore Storico',
-                tier: 'Antagonista Storico',
-                tierColor: 'bg-neutral-700 text-stone-300 border-stone-500',
-                avatar: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 650, agi: 250, cooldown: 4, magic: 200, strength: 300, stagger: 100 }, // Totale = 1500
-                total: 1500,
-                color: 0x666666,
-                weaponName: 'Bombe a Gas & Pistola Luger',
-                moves: { base1: 'Schiaffo Propaganda', base2: 'Calcio Blitzkrieg', spec1: 'Lancio Bomba a Gas', spec2: 'Carica Panzerwagen' }
-            },
-            {
-                id: 'maria',
-                name: 'Maria Vergine',
-                title: 'Madre del Redentore',
-                tier: 'Figura Sacra',
-                tierColor: 'bg-sky-500/20 text-sky-300 border-sky-400',
-                avatar: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 450, agi: 180, cooldown: 5, magic: 200, strength: 100, stagger: 70 }, // Totale = 1000
-                total: 1000,
-                color: 'sky-blue',
-                weaponName: 'Rosario Benedetto & Scudo Celeste',
-                moves: { base1: 'Gesto di Grazia', base2: 'Calcio Materno', spec1: 'Lacrime di Sangue', spec2: 'Scudo Immacolato' }
-            },
-            {
-                id: 'giuseppe',
-                name: 'San Giuseppe',
-                title: 'Il Falegname',
-                tier: 'Figura Sacra',
-                tierColor: 'bg-amber-800/20 text-amber-700 border-amber-700',
-                avatar: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 400, agi: 150, cooldown: 5, magic: 100, strength: 250, stagger: 100 }, // Totale = 1000
-                total: 1000,
-                color: 0xb45309,
-                weaponName: 'Bastone Intarsiato & Incudine',
-                moves: { base1: 'Mazzata di Legno', base2: 'Calcio del Falegname', spec1: 'Tempesta di Trucioli', spec2: 'Incudine Pesante' }
-            },
-            {
-                id: 'michele',
-                name: 'Arcangelo Michele',
-                title: 'Condottiero Celeste',
-                tier: 'Arcangelo',
-                tierColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-400',
-                avatar: 'https://images.unsplash.com/photo-1563089145-599997674d42?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 420, agi: 220, cooldown: 4, magic: 180, strength: 120, stagger: 60 }, // Totale = 1000
-                total: 1000,
-                color: 0x06b6d4,
-                weaponName: 'Spada Fiammeggiante & Ali Sacre',
-                moves: { base1: 'Fendente Angelico', base2: 'Calcio Alato', spec1: 'Lama di Fuoco Santo', spec2: 'Giudizio Alato' }
-            },
-            {
-                id: 'vlad',
-                name: 'Vlad l\'Impalatore',
-                title: 'Dracula Storico',
-                tier: 'Antagonista Storico',
-                tierColor: 'bg-red-900/30 text-red-400 border-red-700',
-                avatar: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 400, agi: 210, cooldown: 4, magic: 90, strength: 220, stagger: 80 }, // Totale = 1000
-                total: 1000,
-                color: 0x880000,
-                weaponName: 'Lance Acuminate & Sciabola',
-                moves: { base1: 'Affondo di Lancia', base2: 'Calcio Vampirico', spec1: 'Forestates di Lance', spec2: 'Morso Sanguinario' }
-            },
-            {
-                id: 'attila',
-                name: 'Attila',
-                title: 'Flagello di Dio',
-                tier: 'Antagonista Storico',
-                tierColor: 'bg-orange-800/20 text-orange-400 border-orange-600',
-                avatar: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 380, agi: 200, cooldown: 5, magic: 50, strength: 270, stagger: 100 }, // Totale = 1000
-                total: 1000,
-                color: 0xea580c,
-                weaponName: 'Accetta Unna & Lancia da Cavalleria',
-                moves: { base1: 'Accetta Unna', base2: 'Calcio del Barbaro', spec1: 'Orda di Cavalieri', spec2: 'Furia Inarrestabile' }
-            },
-            {
-                id: 'gengis',
-                name: 'Gengis Khan',
-                title: 'Sovrano Mongolo',
-                tier: 'Antagonista Storico',
-                tierColor: 'bg-amber-900/30 text-amber-500 border-amber-700',
-                avatar: 'https://images.unsplash.com/photo-1533158307587-828f0a76ef46?auto=format&fit=crop&q=80&w=400',
-                stats: { hp: 400, agi: 230, cooldown: 4, magic: 80, strength: 210, stagger: 80 }, // Totale = 1000
-                total: 1000,
-                color: 0xd97706,
-                weaponName: 'Sciabola Mongola & Arco Composito',
-                moves: { base1: 'Sciabola Mongola', base2: 'Calcio della Steppa', spec1: 'Pioggia di Frecce', spec2: 'Carica della Cavalleria' }
-            }
+        // --- ROSTER & FIGHTER DATA ---
+        const FIGHTERS = [
+            { id: 'god', name: 'Dio', title: 'Creatore dell’Universo', hp: 3000, agility: 70, cd: 8, magic: 100, strength: 100, stagger: 90, color: 0xffd700, weapon: 'Sceptre', icon: '⚡' },
+            { id: 'satan', name: 'Satana', title: 'Signore degli Inferi', hp: 2500, agility: 90, cd: 6, magic: 90, strength: 95, stagger: 80, color: 0xdc2626, weapon: 'Trident', icon: '🔥' },
+            { id: 'jesus', name: 'Gesù', title: 'Il Messia', hp: 1500, agility: 80, cd: 7, magic: 95, strength: 70, stagger: 85, color: 0x38bdf8, weapon: 'HaloCross', icon: '✝️' },
+            { id: 'hitler', name: 'Hitler', title: 'Dittatore del Secolo', hp: 1500, agility: 75, cd: 7, magic: 60, strength: 80, stagger: 75, color: 0x475569, weapon: 'GasBomb', icon: '💣' },
+            { id: 'attila', name: 'Attila', title: 'Flagello di Dio', hp: 1300, agility: 85, cd: 5, magic: 50, strength: 90, stagger: 70, color: 0xb45309, weapon: 'Sabre', icon: '🗡️' },
+            { id: 'vlad', name: 'Vlad l’Impalatore', title: 'Il Conte Dracula', hp: 1400, agility: 88, cd: 6, magic: 70, strength: 85, stagger: 75, color: 0x881337, weapon: 'Lances', icon: '🧛' },
+            { id: 'michael', name: 'Arcangelo Michele', title: 'Capo delle Milizie Celesti', hp: 1600, agility: 95, cd: 5, magic: 85, strength: 88, stagger: 90, color: 0xe2e8f0, weapon: 'FlameSword', icon: '🛡️' },
+            { id: 'buddha', name: 'Buddha', title: 'Il Illuminato', hp: 1800, agility: 60, cd: 10, magic: 95, strength: 60, stagger: 100, color: 0xf59e0b, weapon: 'LotusStaff', icon: '☸️' }
         ];
 
-        // Variabili Globali di Stato
-        let gameMode = 'pvp';
-        let selectedArena = 'heaven';
+        // Game State Variables
+        let gameState = 'MENU'; // MENU, CHAR_SELECT, FIGHTING, GAME_OVER
+        let gameMode = 'P1_VS_CPU'; // P1_VS_CPU, P1_VS_P2
         let selectedP1 = null;
         let selectedP2 = null;
-        let selectTurn = 1;
-        let activePreviewIndex = 0;
 
-        // Variabili Three.js 3D
+        // Three.js Core Variables
         let scene, camera, renderer;
         let p1Mesh, p2Mesh;
-        let battleTimer = 99;
-        let timerInterval = null;
+        let p1Mixer, p2Mixer;
         let animationFrameId = null;
-        let p1State = {}, p2State = {};
-        const keys = {};
+        let clock = new THREE.Clock();
 
-        // Inizializzazione Selezione Arena
-        function openArenaSelect(mode) {
-            gameMode = mode;
-            document.getElementById('menu-screen').classList.add('hidden');
-            document.getElementById('arena-select-screen').classList.remove('hidden');
-        }
+        // Combat Engine Variables
+        let p1Data = { hp: 1000, maxHp: 1000, special: 0, x: -5, z: 0, vy: 0, isJumping: false, state: 'IDLE', attackTimer: 0, combo: 0, facing: 1 };
+        let p2Data = { hp: 1000, maxHp: 1000, special: 0, x: 5, z: 0, vy: 0, isJumping: false, state: 'IDLE', attackTimer: 0, combo: 0, facing: -1 };
+        let matchTimer = 99;
+        let timerInterval = null;
+        let roundActive = false;
+        let keys = {};
 
-        function selectArena(arenaKey) {
-            selectedArena = arenaKey;
-            document.getElementById('arena-select-screen').classList.add('hidden');
-            document.getElementById('char-select-screen').classList.remove('hidden');
-            selectTurn = 1;
-            selectedP1 = null;
-            selectedP2 = null;
-            initCharacterSelect();
-        }
+        // --- INITIALIZATION & UI FLOW ---
+        window.onload = () => {
+            buildRosterUI();
+            setupKeyboardListeners();
+        };
 
-        function backToMenu() {
-            document.getElementById('arena-select-screen').classList.add('hidden');
-            document.getElementById('char-select-screen').classList.add('hidden');
-            document.getElementById('menu-screen').classList.remove('hidden');
-        }
-
-        // Griglia Personaggi
-        function initCharacterSelect() {
-            const grid = document.getElementById('character-grid');
+        function buildRosterUI() {
+            const grid = document.getElementById('roster-grid');
             grid.innerHTML = '';
-            characters.forEach((char, index) => {
+            FIGHTERS.forEach(f => {
                 const card = document.createElement('div');
-                card.className = `bg-neutral-900 border-2 border-stone-800 hover:border-amber-400 rounded-xl p-2.5 flex flex-col items-center cursor-pointer transition transform hover:scale-105 ${activePreviewIndex === index ? 'ring-2 ring-amber-500' : ''}`;
-                card.onclick = () => selectCharacterPreview(index);
+                card.className = 'card-glow bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col items-center cursor-pointer transition transform hover:-translate-y-1';
+                card.onclick = () => selectFighter(f.id);
+                card.id = `fighter-card-${f.id}`;
                 card.innerHTML = `
-                    <img src="${char.avatar}" alt="${char.name}" class="w-16 h-16 object-cover rounded-lg mb-1 border border-stone-700">
-                    <h4 class="font-bold text-xs text-stone-200 text-center truncate w-full">${char.name}</h4>
-                    <span class="text-[9px] text-stone-400 text-center truncate w-full">${char.title}</span>
-                    <span class="mt-1 text-[8px] px-1.5 py-0.5 rounded border ${char.tierColor}">${char.tier}</span>
+                    <div class="w-16 h-16 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-3xl mb-3 shadow-inner">
+                        ${f.icon}
+                    </div>
+                    <h4 class="cinzel font-bold text-white text-center">${f.name}</h4>
+                    <span class="text-xs text-slate-400 text-center mt-1">HP: ${f.hp}</span>
                 `;
                 grid.appendChild(card);
             });
-            selectCharacterPreview(0);
         }
 
-        function selectCharacterPreview(index) {
-            activePreviewIndex = index;
-            const char = characters[index];
-            document.getElementById('preview-avatar').src = char.avatar;
-            document.getElementById('preview-name').textContent = char.name;
-            document.getElementById('preview-title').textContent = char.title;
-            document.getElementById('preview-weapon').textContent = `⚔️ Arma: ${char.weaponName}`;
-            
-            const tierEl = document.getElementById('preview-tier');
-            tierEl.textContent = char.tier;
-            tierEl.className = `px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${char.tierColor}`;
-
-            document.getElementById('stat-hp').textContent = char.stats.hp;
-            document.getElementById('stat-agi').textContent = char.stats.agi;
-            document.getElementById('stat-mag').textContent = char.stats.magic;
-            document.getElementById('stat-str').textContent = char.stats.strength;
-            document.getElementById('stat-res').textContent = char.stats.stagger;
-            document.getElementById('stat-cd').textContent = char.stats.cooldown + 's';
-            document.getElementById('stat-total').textContent = char.total;
-
-            document.getElementById('move-b1').textContent = char.moves.base1;
-            document.getElementById('move-b2').textContent = char.moves.base2;
-            document.getElementById('move-s1').textContent = char.moves.spec1;
-            document.getElementById('move-s2').textContent = char.moves.spec2;
+        function goToCharacterSelect(mode) {
+            gameMode = mode;
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('char-select-screen').classList.remove('hidden');
+            selectedP1 = null;
+            selectedP2 = null;
+            document.getElementById('select-title').innerText = gameMode === 'P1_VS_CPU' ? 'SELEZIONA IL TUO LOTTATORE' : 'P1: SELEZIONA IL TUO LOTTATORE';
+            updatePreviewFooter();
         }
 
-        function confirmCharacterSelection() {
-            const chosen = characters[activePreviewIndex];
-            if (selectTurn === 1) {
-                selectedP1 = chosen;
-                if (gameMode === 'local') {
-                    selectTurn = 2;
-                    document.getElementById('select-title').textContent = "SELEZIONA IL TUO COMBATTENTE (GIOCATORE 2)";
-                    initCharacterSelect();
-                } else {
-                    let cpuOptions = characters.filter(c => c.id !== selectedP1.id);
-                    selectedP2 = cpuOptions[Math.floor(Math.random() * cpuOptions.length)];
-                    start3DBattle();
-                }
-            } else {
-                selectedP2 = chosen;
-                start3DBattle();
-            }
-        }
-
-        // Avvio Combattimento 3D con Three.js
-        function start3DBattle() {
+        function backToMenu() {
             document.getElementById('char-select-screen').classList.add('hidden');
-            document.getElementById('battle-screen').classList.remove('hidden');
+            document.getElementById('game-ui').classList.add('hidden');
+            document.getElementById('game-over-modal').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            gameState = 'MENU';
+            stopGameLoop();
+        }
 
-            if (gameMode === 'pvp') {
-                document.getElementById('p2-controls-hint').innerHTML = `<strong class="text-red-400">CPU Avanzata Attiva</strong>`;
+        function selectFighter(id) {
+            const fighter = FIGHTERS.find(f => f.id === id);
+            if (!selectedP1) {
+                selectedP1 = fighter;
+                document.getElementById(`fighter-card-${id}`).classList.add('border-amber-500', 'bg-amber-950/40');
+                if (gameMode === 'P1_VS_P2') {
+                    document.getElementById('select-title').innerText = 'P2: SELEZIONA IL TUO LOTTATORE';
+                } else {
+                    // Auto-select CPU
+                    const available = FIGHTERS.filter(f => f.id !== id);
+                    selectedP2 = available[Math.floor(Math.random() * available.length)];
+                    document.getElementById(`fighter-card-${selectedP2.id}`).classList.add('border-red-500', 'bg-red-950/40');
+                    enableStartButton();
+                }
+            } else if (gameMode === 'P1_VS_P2' && !selectedP2) {
+                selectedP2 = fighter;
+                document.getElementById(`fighter-card-${id}`).classList.add('border-red-500', 'bg-red-950/40');
+                enableStartButton();
+            } else {
+                // Reset selection
+                FIGHTERS.forEach(f => {
+                    const el = document.getElementById(`fighter-card-${f.id}`);
+                    if (el) el.classList.remove('border-amber-500', 'bg-amber-950/40', 'border-red-500', 'bg-red-950/40');
+                });
+                selectedP1 = fighter;
+                selectedP2 = null;
+                document.getElementById(`fighter-card-${id}`).classList.add('border-amber-500', 'bg-amber-950/40');
+                document.getElementById('select-title').innerText = 'P2: SELEZIONA IL TUO LOTTATORE';
+                document.getElementById('start-match-btn').disabled = true;
+                document.getElementById('start-match-btn').classList.add('opacity-50', 'cursor-not-allowed');
             }
+            updatePreviewFooter();
+        }
+
+        function enableStartButton() {
+            const btn = document.getElementById('start-match-btn');
+            btn.disabled = false;
+            btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        function updatePreviewFooter() {
+            const f = selectedP1;
+            if (!f) {
+                document.getElementById('preview-avatar').innerText = '?';
+                document.getElementById('preview-name').innerText = 'Seleziona un lottatore';
+                document.getElementById('preview-title').innerText = 'Arma: Nessuna';
+                document.getElementById('preview-stats').innerHTML = '';
+                return;
+            }
+            document.getElementById('preview-avatar').innerText = f.icon;
+            document.getElementById('preview-name').innerText = f.name + (selectedP2 ? ` vs ${selectedP2.name}` : '');
+            document.getElementById('preview-title').innerText = `Arma: ${f.weapon} | ${f.title}`;
+            document.getElementById('preview-stats').innerHTML = `
+                <div class="bg-slate-800 p-2 rounded-lg"><div class="text-amber-400 font-bold">${f.hp}</div><div class="text-[10px] text-slate-400">HP</div></div>
+                <div class="bg-slate-800 p-2 rounded-lg"><div class="text-amber-400 font-bold">${f.strength}</div><div class="text-[10px] text-slate-400">FORZA</div></div>
+                <div class="bg-slate-800 p-2 rounded-lg"><div class="text-amber-400 font-bold">${f.agility}</div><div class="text-[10px] text-slate-400">AGILITÀ</div></div>
+                <div class="bg-slate-800 p-2 rounded-lg"><div class="text-amber-400 font-bold">${f.magic}</div><div class="text-[10px] text-slate-400">MAGIA</div></div>
+                <div class="bg-slate-800 p-2 rounded-lg"><div class="text-amber-400 font-bold">${f.stagger}</div><div class="text-[10px] text-slate-400">STAG</div></div>
+                <div class="bg-slate-800 p-2 rounded-lg"><div class="text-amber-400 font-bold">${f.cd}s</div><div class="text-[10px] text-slate-400">CD</div></div>
+            `;
+        }
+
+        function showLoreModal() { document.getElementById('lore-modal').classList.remove('hidden'); }
+        function closeLoreModal() { document.getElementById('lore-modal').classList.add('hidden'); }
+
+        // --- MATCH START & THREE.JS SETUP ---
+        function startMatch() {
+            document.getElementById('char-select-screen').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            gameState = 'FIGHTING';
+
+            // Setup HUD Names
+            document.getElementById('p1-name-hud').innerText = selectedP1.name;
+            document.getElementById('p2-name-hud').innerText = selectedP2.name;
+
+            // Initialize Combat stats
+            p1Data.maxHp = selectedP1.hp;
+            p1Data.hp = selectedP1.hp;
+            p1Data.special = 0;
+            p1Data.x = -4;
+            p1Data.z = 0;
+            p1Data.vy = 0;
+            p1Data.state = 'IDLE';
+
+            p2Data.maxHp = selectedP2.hp;
+            p2Data.hp = selectedP2.hp;
+            p2Data.special = 0;
+            p2Data.x = 4;
+            p2Data.z = 0;
+            p2Data.vy = 0;
+            p2Data.state = 'IDLE';
 
             initThreeScene();
-            
-            p1State = {
-                x: -3, z: 0,
-                hp: selectedP1.stats.hp, maxHp: selectedP1.stats.hp,
-                specialCharge: 0, char: selectedP1, mesh: p1Mesh, actionText: '', actionTimer: 0
-            };
-
-            p2State = {
-                x: 3, z: 0,
-                hp: selectedP2.stats.hp, maxHp: selectedP2.stats.hp,
-                specialCharge: 0, char: selectedP2, mesh: p2Mesh, actionText: '', actionTimer: 0
-            };
-
-            updateHUD();
-            startAnnouncerSequence();
+            startCountdown();
         }
 
-        // Configurazione Scena 3D con Three.js
         function initThreeScene() {
-            const container = document.getElementById('canvas-container');
-            container.innerHTML = ''; // pulisci precedente canvas
+            // Clear existing canvas if any
+            const oldCanvas = document.querySelector('canvas');
+            if (oldCanvas) oldCanvas.remove();
 
             scene = new THREE.Scene();
-            
-            // Colore e nebbia in base all'arena
-            if (selectedArena === 'heaven') {
-                scene.background = new THREE.Color(0x1a202c);
-                scene.fog = new THREE.FogExp2(0x1a202c, 0.05);
-            } else if (selectedArena === 'hell') {
-                scene.background = new THREE.Color(0x2a0808);
-                scene.fog = new THREE.FogExp2(0x2a0808, 0.06);
-            } else {
-                scene.background = new THREE.Color(0x111827);
-                scene.fog = new THREE.FogExp2(0x111827, 0.05);
-            }
+            scene.background = new THREE.Color(0x050814);
+            scene.fog = new THREE.FogExp2(0x050814, 0.035);
 
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 3, 10);
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 3, 12);
             camera.lookAt(0, 1, 0);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.body.appendChild(renderer.domElement);
 
-            // Illuminazione Ambientale e Direzionale
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+            // Lighting Setup (Crucial to prevent black screen)
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
 
-            const dirLight = new THREE.DirectionalLight(0xfffaed, 1.2);
-            dirLight.position.set(5, 10, 7);
+            const dirLight = new THREE.DirectionalLight(0xfff5ea, 1.2);
+            dirLight.position.set(10, 20, 10);
             dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
             scene.add(dirLight);
 
-            // Pavimento Arena 3D
-            let floorColor = selectedArena === 'heaven' ? 0xe5e7eb : (selectedArena === 'hell' ? 0x7f1d1d : 0x9a3412);
+            const pointLight1 = new THREE.PointLight(selectedP1.color, 2, 15);
+            pointLight1.position.set(-4, 3, 2);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(selectedP2.color, 2, 15);
+            pointLight2.position.set(4, 3, 2);
+            scene.add(pointLight2);
+
+            // Arena Floor & Columns
+            createArena();
+
+            // Fighter Meshes
+            p1Mesh = createFighterMesh(selectedP1);
+            p1Mesh.position.set(p1Data.x, 0, p1Data.z);
+            scene.add(p1Mesh);
+
+            p2Mesh = createFighterMesh(selectedP2);
+            p2Mesh.position.set(p2Data.x, 0, p2Data.z);
+            scene.add(p2Mesh);
+
+            window.addEventListener('resize', onWindowResize);
+            startGameLoop();
+        }
+
+        function createArena() {
+            // Floor Grid Arena
             const floorGeo = new THREE.PlaneGeometry(30, 20);
-            const floorMat = new THREE.MeshStandardMaterial({ color: floorColor, roughness: 0.4 });
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.8, metalness: 0.2 });
             const floor = new THREE.Mesh(floorGeo, floorMat);
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
             scene.add(floor);
 
-            // Creazione Lottatori Umanoidi 3D e Armi Specifiche
-            p1Mesh = createHumanoidFighter(selectedP1);
-            p1Mesh.position.set(-3, 1, 0);
-            scene.add(p1Mesh);
+            // Glowing Grid Lines
+            const grid = new THREE.GridHelper(30, 30, 0xd97706, 0x1f2937);
+            grid.position.y = 0.01;
+            scene.add(grid);
 
-            p2Mesh = createHumanoidFighter(selectedP2);
-            p2Mesh.position.set(3, 1, 0);
-            p2Mesh.rotation.y = Math.PI;
-            scene.add(p2Mesh);
-
-            window.addEventListener('resize', onWindowResize);
+            // Pillars around arena
+            const pillarGeo = new THREE.CylinderGeometry(0.6, 0.8, 6, 8);
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.5 });
+            [-12, 12].forEach(x => {
+                [-8, 8].forEach(z => {
+                    const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                    pillar.position.set(x, 3, z);
+                    pillar.castShadow = true;
+                    scene.add(pillar);
+                });
+            });
         }
 
-        // Generazione Personaggio Umanoide 3D con Arma Personalizzata
-        function createHumanoidFighter(charData) {
+        function createFighterMesh(fighter) {
             const group = new THREE.Group();
 
-            // Corpo principale (Busto)
-            const bodyGeo = new THREE.BoxGeometry(0.9, 1.4, 0.5);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: charData.color, roughness: 0.3 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.position.y = 0.7;
-            body.castShadow = true;
-            group.add(body);
+            // Procedural robust 3D geometric avatar
+            const bodyMat = new THREE.MeshStandardMaterial({ color: fighter.color, roughness: 0.4, metalness: 0.3 });
+            const armorMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.2, metalness: 0.8 });
 
-            // Testa realistica proporzionata
-            const headGeo = new THREE.SphereGeometry(0.35, 16, 16);
-            const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.5 });
-            const head = new THREE.Mesh(headGeo, headMat);
-            head.position.y = 1.65;
+            // Torso
+            const torsoGeo = new THREE.BoxGeometry(1.2, 1.6, 0.7);
+            const torso = new THREE.Mesh(torsoGeo, bodyMat);
+            torso.position.y = 1.8;
+            torso.castShadow = true;
+            group.add(torso);
+
+            // Head
+            const headGeo = new THREE.SphereGeometry(0.45, 16, 16);
+            const head = new THREE.Mesh(headGeo, bodyMat);
+            head.position.y = 2.8;
             head.castShadow = true;
             group.add(head);
 
-            // Braccia e Gambe
-            const limbMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 });
-            
-            const armGeo = new THREE.BoxGeometry(0.3, 1.1, 0.3);
-            const leftArm = new THREE.Mesh(armGeo, limbMat);
-            leftArm.position.set(-0.7, 0.7, 0);
+            // Arms
+            const armGeo = new THREE.CylinderGeometry(0.2, 0.2, 1.4);
+            const leftArm = new THREE.Mesh(armGeo, armorMat);
+            leftArm.position.set(-0.9, 1.8, 0);
+            leftArm.castShadow = true;
             group.add(leftArm);
 
-            const rightArm = new THREE.Mesh(armGeo, limbMat);
-            rightArm.position.set(0.7, 0.7, 0);
+            const rightArm = new THREE.Mesh(armGeo, armorMat);
+            rightArm.position.set(0.9, 1.8, 0);
+            rightArm.castShadow = true;
             group.add(rightArm);
 
-            const legGeo = new THREE.BoxGeometry(0.35, 1.2, 0.35);
-            const leftLeg = new THREE.Mesh(legGeo, limbMat);
-            leftLeg.position.set(-0.25, -0.6, 0);
+            // Legs
+            const legGeo = new THREE.CylinderGeometry(0.25, 0.2, 1.6);
+            const leftLeg = new THREE.Mesh(legGeo, armorMat);
+            leftLeg.position.set(-0.4, 0.8, 0);
+            leftLeg.castShadow = true;
             group.add(leftLeg);
 
-            const rightLeg = new THREE.Mesh(legGeo, limbMat);
-            rightLeg.position.set(0.25, -0.6, 0);
+            const rightLeg = new THREE.Mesh(legGeo, armorMat);
+            rightLeg.position.set(0.4, 0.8, 0);
+            rightLeg.castShadow = true;
             group.add(rightLeg);
 
-            // AGGIUNTA ARMI 3D SPECIFICHE PER PERSONAGGIO
+            // Unique Weapon Attachment
             const weaponGroup = new THREE.Group();
-            weaponGroup.position.set(0.9, 0.7, 0.3);
-
-            if (charData.id === 'vlad') {
-                // Lance acuminate (Vlad l'Impalatore)
-                const spearShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.5), new THREE.MeshStandardMaterial({ color: 0x5c4033 }));
-                const spearTip = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.6), new THREE.MeshStandardMaterial({ color: 0xc0c0c0, metalness: 0.9 }));
-                spearTip.position.y = 1.3;
-                weaponGroup.add(spearShaft);
-                weaponGroup.add(spearTip);
-            } else if (charData.id === 'hitler') {
-                // Bombe a gas cilindriche
-                const bombGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.6);
-                const bombMat = new THREE.MeshStandardMaterial({ color: 0x22543d, metalness: 0.8 });
-                const bomb = new THREE.Mesh(bombGeo, bombMat);
-                weaponGroup.add(bomb);
-            } else if (charData.id === 'dio' || charData.id === 'michele') {
-                // Spada fiammeggiante o Scettro luminoso
-                const swordBlade = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.0, 0.05), new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.6 }));
-                swordBlade.position.y = 1.0;
-                weaponGroup.add(swordBlade);
-            } else if (charData.id === 'satana') {
-                // Falce Infernale
-                const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.8), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-                const blade = new THREE.Mesh(new THREE.TorusGeometry(0.6, 0.08, 8, 16, Math.PI), new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xdc2626 }));
-                blade.position.y = 1.2;
-                weaponGroup.add(handle);
+            weaponGroup.position.set(1.1, 1.8, 0.5);
+            
+            if (fighter.weapon === 'Trident' || fighter.weapon === 'Sceptre') {
+                const poleGeo = new THREE.CylinderGeometry(0.05, 0.05, 3);
+                const pole = new THREE.Mesh(poleGeo, new THREE.MeshStandardMaterial({ color: 0xd4af37 }));
+                weaponGroup.add(pole);
+            } else if (fighter.weapon === 'Sabre' || fighter.weapon === 'FlameSword') {
+                const bladeGeo = new THREE.BoxGeometry(0.15, 2, 0.05);
+                const blade = new THREE.Mesh(bladeGeo, new THREE.MeshStandardMaterial({ color: 0x94a3b8, emissive: 0x3b82f6, emissiveIntensity: 0.5 }));
                 weaponGroup.add(blade);
-            } else {
-                // Arma standard generica definita
-                const defaultWp = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.5, 0.2), new THREE.MeshStandardMaterial({ color: 0xd4d4d8 }));
-                weaponGroup.add(defaultWp);
+            } else if (fighter.weapon === 'GasBomb') {
+                const bombGeo = new THREE.SphereGeometry(0.3, 12, 12);
+                const bomb = new THREE.Mesh(bombGeo, new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+                weaponGroup.add(bomb);
             }
-
             group.add(weaponGroup);
+
             return group;
         }
 
-        function onWindowResize() {
-            const container = document.getElementById('canvas-container');
-            if (!container || !renderer) return;
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-        }
-
-        // Annunciatore Iniziale
-        function startAnnouncerSequence() {
-            const announcerBox = document.getElementById('announcer-box');
-            const announcerText = document.getElementById('announcer-text');
-            announcerBox.classList.remove('hidden');
-            announcerText.textContent = "READY?";
-            announcerText.classList.add('scale-100');
-
+        // --- GAME LOOP & PHYSICS ---
+        function startCountdown() {
+            roundActive = false;
+            matchTimer = 99;
+            document.getElementById('match-timer').innerText = matchTimer;
+            const annText = document.getElementById('announcer-text');
+            annText.innerText = 'ROUND 1';
+            
             setTimeout(() => {
-                announcerText.textContent = "FIGHT!";
+                annText.innerText = 'FIGHT!';
                 setTimeout(() => {
-                    announcerBox.classList.add('hidden');
-                    announcerText.classList.remove('scale-100');
-                    runGameLoop();
+                    annText.innerText = '';
+                    roundActive = true;
                     startTimer();
                 }, 1000);
-            }, 1000);
+            }, 1200);
         }
 
         function startTimer() {
-            battleTimer = 99;
-            document.getElementById('hud-timer').textContent = battleTimer;
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
-                battleTimer--;
-                document.getElementById('hud-timer').textContent = battleTimer;
-                if (battleTimer <= 0) {
+                if (!roundActive) return;
+                matchTimer--;
+                document.getElementById('match-timer').innerText = matchTimer;
+                if (matchTimer <= 0) {
                     clearInterval(timerInterval);
                     checkWinner(true);
                 }
             }, 1000);
         }
 
-        // Controlli Tastiera
-        window.addEventListener('keydown', (e) => {
-            keys[e.key.toLowerCase()] = true;
-            if (document.getElementById('battle-screen').classList.contains('hidden') === false) {
-                handleInput(e.key.toLowerCase());
+        function startGameLoop() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            function animate() {
+                animationFrameId = requestAnimationFrame(animate);
+                const delta = clock.getDelta();
+
+                if (roundActive) {
+                    handleInput();
+                    updateAI();
+                    updatePhysics(delta);
+                }
+
+                renderer.render(scene, camera);
             }
-        });
-        window.addEventListener('keyup', (e) => {
-            keys[e.key.toLowerCase()] = false;
-        });
+            animate();
+        }
 
-        function handleInput(key) {
-            if (key === 'f') executeMove(p1State, p2State, 'base1', 16, 10);
-            if (key === 'g') executeMove(p1State, p2State, 'base2', 22, 15);
-            if (key === 'h' && p1State.specialCharge >= 100) executeSpecial(p1State, p2State, 'spec1', 45);
-            if (key === 'j' && p1State.specialCharge >= 100) executeSpecial(p1State, p2State, 'spec2', 75);
+        function stopGameLoop() {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            if (timerInterval) clearInterval(timerInterval);
+        }
 
-            if (gameMode === 'local') {
-                if (key === '1') executeMove(p2State, p1State, 'base1', 16, 10);
-                if (key === '2') executeMove(p2State, p1State, 'base2', 22, 15);
-                if (key === '3' && p2State.specialCharge >= 100) executeSpecial(p2State, p1State, 'spec1', 45);
-                if (key === '4' && p2State.specialCharge >= 100) executeSpecial(p2State, p1State, 'spec2', 75);
+        // --- CONTROLS & INPUT ---
+        function setupKeyboardListeners() {
+            window.addEventListener('keydown', e => { keys[e.code] = true; });
+            window.addEventListener('keyup', e => { keys[e.code] = false; });
+        }
+
+        function handleInput() {
+            // P1 Controls (WASD + F/G/H)
+            const speed = selectedP1.agility * 0.008;
+            if (keys['KeyA']) { p1Data.x -= speed; p1Data.facing = -1; }
+            if (keys['KeyD']) { p1Data.x += speed; p1Data.facing = 1; }
+            if (keys['KeyW'] && !p1Data.isJumping) { p1Data.vy = 0.25; p1Data.isJumping = true; }
+            
+            // Bounds
+            p1Data.x = Math.max(-12, Math.min(12, p1Data.x));
+
+            if (keys['KeyF'] && p1Data.state === 'IDLE') performAttack('P1', 'PUNCH');
+            if (keys['KeyG'] && p1Data.state === 'IDLE') performAttack('P1', 'KICK');
+            if (keys['KeyH'] && p1Data.state === 'IDLE' && p1Data.special >= 100) performAttack('P1', 'SPECIAL');
+
+            // P2 Controls (Arrows + 1/2/3 if P1 vs P2)
+            if (gameMode === 'P1_VS_P2') {
+                const p2Speed = selectedP2.agility * 0.008;
+                if (keys['ArrowLeft']) { p2Data.x -= p2Speed; p2Data.facing = -1; }
+                if (keys['ArrowRight']) { p2Data.x += p2Speed; p2Data.facing = 1; }
+                if (keys['ArrowUp'] && !p2Data.isJumping) { p2Data.vy = 0.25; p2Data.isJumping = true; }
+
+                p2Data.x = Math.max(-12, Math.min(12, p2Data.x));
+
+                if (keys['Digit1'] && p2Data.state === 'IDLE') performAttack('P2', 'PUNCH');
+                if (keys['Digit2'] && p2Data.state === 'IDLE') performAttack('P2', 'KICK');
+                if (keys['Digit3'] && p2Data.state === 'IDLE' && p2Data.special >= 100) performAttack('P2', 'SPECIAL');
             }
         }
 
-        function executeMove(attacker, defender, moveType, baseDmg, spGain) {
-            if (attacker.hp <= 0 || defender.hp <= 0) return;
-            let moveName = attacker.char.moves[moveType];
-            attacker.actionText = `${attacker.char.name}: ${moveName}!`;
-            attacker.actionTimer = 45;
+        function updateAI() {
+            if (gameMode !== 'P1_VS_CPU' || !roundActive) return;
 
-            let damage = baseDmg + (attacker.char.stats.strength * 0.05);
-            defender.hp = Math.max(0, defender.hp - damage);
-            attacker.specialCharge = Math.min(100, attacker.specialCharge + spGain);
-
-            // Animazione colpo mesh 3D
-            if (attacker.mesh) {
-                attacker.mesh.position.z += attacker === p1State ? 0.6 : -0.6;
-                setTimeout(() => { if (attacker.mesh) attacker.mesh.position.z = 0; }, 150);
-            }
-
-            showActionLog(attacker.actionText);
-            checkWinner();
-            updateHUD();
-        }
-
-        function executeSpecial(attacker, defender, moveType, baseDmg) {
-            if (attacker.hp <= 0 || defender.hp <= 0) return;
-            let moveName = attacker.char.moves[moveType];
-            attacker.actionText = `⚡ SPECIALE: ${moveName}!`;
-            attacker.actionTimer = 60;
-
-            let damage = baseDmg + (attacker.char.stats.magic * 0.12);
-            defender.hp = Math.max(0, defender.hp - damage);
-            attacker.specialCharge = 0;
-
-            showActionLog(attacker.actionText);
-            checkWinner();
-            updateHUD();
-        }
-
-        function showActionLog(text) {
-            const log = document.getElementById('action-log');
-            log.textContent = text;
-            log.style.opacity = '1';
-            setTimeout(() => { log.style.opacity = '0'; }, 1500);
-        }
-
-        // IA CPU Avanzata
-        let cpuCooldown = 0;
-        function updateCPU() {
-            if (gameMode !== 'pvp' || p2State.hp <= 0 || p1State.hp <= 0) return;
-
-            let dx = p1State.x - p2State.x;
+            // Simple aggressive CPU AI
+            const dx = p1Data.x - p2Data.x;
+            const cpuSpeed = selectedP2.agility * 0.006;
+            
             if (Math.abs(dx) > 2.0) {
-                p2State.x += Math.sign(dx) * (p2State.char.stats.agi * 0.003);
+                p2Data.x += Math.sign(dx) * cpuSpeed;
+            } else if (Math.random() < 0.03 && p2Data.state === 'IDLE') {
+                performAttack('P2', Math.random() < 0.6 ? 'PUNCH' : 'KICK');
             }
+            p2Data.facing = Math.sign(dx);
+            p2Data.x = Math.max(-12, Math.min(12, p2Data.x));
+        }
 
-            cpuCooldown++;
-            if (cpuCooldown > 80 - (p2State.char.stats.agi * 0.04)) {
-                cpuCooldown = 0;
-                if (p2State.specialCharge >= 100 && Math.random() > 0.2) {
-                    executeSpecial(p2State, p1State, Math.random() > 0.5 ? 'spec1' : 'spec2', 55);
-                } else {
-                    executeMove(p2State, p1State, Math.random() > 0.5 ? 'base1' : 'base2', 18, 12);
+        function updatePhysics(delta) {
+            // P1 Gravity & Mesh position
+            if (p1Data.isJumping) {
+                p1Data.vy -= 0.015;
+                p1Mesh.position.y += p1Data.vy;
+                if (p1Mesh.position.y <= 0) {
+                    p1Mesh.position.y = 0;
+                    p1Data.isJumping = false;
+                    p1Data.vy = 0;
                 }
             }
+            p1Mesh.position.x = p1Data.x;
+            p1Mesh.rotation.y = p1Data.facing === 1 ? Math.PI / 2 : -Math.PI / 2;
+
+            // P2 Gravity & Mesh position
+            if (p2Data.isJumping) {
+                p2Data.vy -= 0.015;
+                p2Mesh.position.y += p2Data.vy;
+                if (p2Mesh.position.y <= 0) {
+                    p2Mesh.position.y = 0;
+                    p2Data.isJumping = false;
+                    p2Data.vy = 0;
+                }
+            }
+            p2Mesh.position.x = p2Data.x;
+            p2Mesh.rotation.y = p2Data.facing === 1 ? Math.PI / 2 : -Math.PI / 2;
+
+            // Passive special generation
+            if (p1Data.special < 100) p1Data.special += 0.2;
+            if (p2Data.special < 100) p2Data.special += 0.2;
+
+            updateHUD();
         }
 
-        // Loop Principale Animazione e Rendering 3D
-        function runGameLoop() {
-            if (document.getElementById('battle-screen').classList.contains('hidden')) return;
+        function performAttack(attacker, type) {
+            const isP1 = attacker === 'P1';
+            const attData = isP1 ? p1Data : p2Data;
+            const defData = isP1 ? p2Data : p1Data;
+            const attFighter = isP1 ? selectedP1 : selectedP2;
 
-            // Movimento P1
-            let p1Speed = p1State.char.stats.agi * 0.008;
-            if (keys['a']) p1State.x = Math.max(-6, p1State.x - p1Speed);
-            if (keys['d']) p1State.x = Math.min(6, p1State.x + p1Speed);
+            attData.state = type;
+            setTimeout(() => { attData.state = 'IDLE'; }, 300);
 
-            if (gameMode === 'local') {
-                let p2Speed = p2State.char.stats.agi * 0.008;
-                if (keys['arrowleft']) p2State.x = Math.max(-6, p2State.x - p2Speed);
-                if (keys['arrowright']) p2State.x = Math.min(6, p2State.x + p2Speed);
-            } else {
-                updateCPU();
+            // Check collision distance
+            const dist = Math.abs(p1Data.x - p2Data.x);
+            if (dist < 3.5) {
+                let damage = type === 'PUNCH' ? attFighter.strength * 0.8 : type === 'KICK' ? attFighter.strength * 1.2 : attFighter.magic * 2.0;
+                if (type === 'SPECIAL') attData.special = 0;
+                
+                defData.hp = Math.max(0, defData.hp - damage);
+                
+                // Visual hit reaction feedback
+                const targetMesh = isP1 ? p2Mesh : p1Mesh;
+                targetMesh.position.z += isP1 ? 0.5 : -0.5;
+                setTimeout(() => { targetMesh.position.z = 0; }, 150);
+
+                if (defData.hp <= 0) {
+                    endMatch(isP1 ? selectedP1.name : selectedP2.name);
+                }
             }
-
-            // Aggiorna posizioni 3D delle mesh
-            if (p1Mesh) p1Mesh.position.x = p1State.x;
-            if (p2Mesh) p2Mesh.position.x = p2State.x;
-
-            // Rotazione reciproca realistica
-            if (p1Mesh && p2Mesh) {
-                p1Mesh.rotation.y = p1State.x < p2State.x ? 0.3 : -0.3;
-                p2Mesh.rotation.y = p2State.x < p1State.x ? 0.3 : -0.3;
-            }
-
-            renderer.render(scene, camera);
-            animationFrameId = requestAnimationFrame(runGameLoop);
         }
 
         function updateHUD() {
-            document.getElementById('hud-p1-name').textContent = selectedP1.name;
-            document.getElementById('hud-p2-name').textContent = selectedP2.name;
+            // P1
+            const p1Percent = Math.max(0, (p1Data.hp / p1Data.maxHp) * 100);
+            document.getElementById('p1-hp-bar').style.width = p1Percent + '%';
+            document.getElementById('p1-hp-text').innerText = `${Math.ceil(p1Data.hp)} / ${p1Data.maxHp}`;
+            document.getElementById('p1-special-bar').style.width = p1Data.special + '%';
 
-            let p1HpPct = Math.max(0, (p1State.hp / p1State.maxHp) * 100);
-            let p2HpPct = Math.max(0, (p2State.hp / p2State.maxHp) * 100);
-
-            document.getElementById('hud-p1-hp-bar').style.width = p1HpPct + '%';
-            document.getElementById('hud-p1-hp-text').textContent = `${Math.ceil(p1State.hp)}/${p1State.maxHp}`;
-            document.getElementById('hud-p1-sp-bar').style.width = p1State.specialCharge + '%';
-
-            document.getElementById('hud-p2-hp-bar').style.width = p2HpPct + '%';
-            document.getElementById('hud-p2-hp-text').textContent = `${Math.ceil(p2State.hp)}/${p2State.maxHp}`;
-            document.getElementById('hud-p2-sp-bar').style.width = p2State.specialCharge + '%';
+            // P2
+            const p2Percent = Math.max(0, (p2Data.hp / p2Data.maxHp) * 100);
+            document.getElementById('p2-hp-bar').style.width = p2Percent + '%';
+            document.getElementById('p2-hp-text').innerText = `${Math.ceil(p2Data.hp)} / ${p2Data.maxHp}`;
+            document.getElementById('p2-special-bar').style.width = p2Data.special + '%';
         }
 
-        function checkWinner(timeOut = false) {
-            if (p1State.hp <= 0 || p2State.hp <= 0 || timeOut) {
-                clearInterval(timerInterval);
-                if (animationFrameId) cancelAnimationFrame(animationFrameId);
-
-                let winnerText = "";
-                if (timeOut) {
-                    winnerText = p1State.hp > p2State.hp ? `${selectedP1.name} VINCE PER TEMPO!` : `${selectedP2.name} VINCE PER TEMPO!`;
-                } else {
-                    winnerText = p1State.hp <= 0 ? `${selectedP2.name} VINCE LO SCONTRO!` : `${selectedP1.name} VINCE LO SCONTRO!`;
-                }
-
-                document.getElementById('winner-title').textContent = winnerText;
-                document.getElementById('battle-screen').classList.add('hidden');
-                document.getElementById('gameover-screen').classList.remove('hidden');
+        function checkWinner(timeOut) {
+            roundActive = false;
+            let winnerName = '';
+            if (timeOut) {
+                winnerName = p1Data.hp >= p2Data.hp ? selectedP1.name : selectedP2.name;
+            } else {
+                winnerName = p1Data.hp > 0 ? selectedP1.name : selectedP2.name;
             }
+            endMatch(winnerName);
+        }
+
+        function endMatch(winnerName) {
+            roundActive = false;
+            stopGameLoop();
+            document.getElementById('winner-title').innerText = `${winnerName} VINCE!`;
+            document.getElementById('game-over-modal').classList.remove('hidden');
+        }
+
+        function restartMatch() {
+            document.getElementById('game-over-modal').classList.add('hidden');
+            startMatch();
         }
 
         function returnToMenu() {
-            if (timerInterval) clearInterval(timerInterval);
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
-            document.getElementById('battle-screen').classList.add('hidden');
-            document.getElementById('char-select-screen').classList.add('hidden');
-            document.getElementById('gameover-screen').classList.add('hidden');
-            document.getElementById('menu-screen').classList.remove('hidden');
+            document.getElementById('game-ui').classList.add('hidden');
+            document.getElementById('game-over-modal').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            gameState = 'MENU';
+            stopGameLoop();
+            const canvas = document.querySelector('canvas');
+            if (canvas) canvas.remove();
         }
 
-        function restartBattle() {
-            document.getElementById('gameover-screen').classList.add('hidden');
-            openArenaSelect(gameMode);
+        function onWindowResize() {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
         }
     </script>
 </body>
