@@ -1,305 +1,741 @@
 ```react
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, Lock, AlertTriangle, CheckCircle, ChevronDown, ChevronUp, 
-  PlayCircle, Activity, GitCommit, Target, Droplet
+  PlayCircle, Activity, GitCommit, Target, Droplet, Heart, ShieldAlert,
+  User, Stethoscope, Filter, X, Menu, BookOpen, Clock, AlertOctagon
 } from 'lucide-react';
 
-// --- DATABASE SIMULATO ---
-// In futuro, questa costante verrà sostituita da una funzione di 'fetch' 
-// che scaricherà i dati automaticamente dal tuo Google Sheet.
-const mockDatabase = [
+// ============================================================================
+// 1. MOCK DATABASE (15 Tecniche Estremamente Dettagliate)
+// ============================================================================
+const MOCK_DATABASE = [
   {
-    id: "1",
+    id: "osteo-001",
     title: "Manipolazione Cervicale (HVLA C5-C6)",
-    videoUrl: "https://example.com/video-cervicale", // Simulazione link Google Drive
     district: "Cervicale",
-    greenFlags: ["Impiegati", "Cervicalgia aspecifica", "Sportivi"],
-    redFlags: ["Osteoporosi grave", "Sospetta frattura", "Insufficienza vertebro-basilare", "Artrite reumatoide (fase acuta)"],
-    fascialChain": "Catena statica posteriore",
+    type: "Strutturale (HVLA)",
+    videoUrl: "https://drive.google.com/simulated-video-1",
+    duration: "2:45",
+    description: "Tecnica ad alta velocità e bassa ampiezza (HVLA) mirata a ripristinare la mobilità del segmento C5-C6 in disfunzione di flessione, rotazione e sidebending.",
+    operatorPosition: "Seduto a capo del lettino.",
+    patientPosition: "Supino con il capo fuori dal lettino, sostenuto dalle mani dell'operatore.",
+    greenFlags: ["Cervicalgia aspecifica", "Sportivi", "Impiegati", "Limitazione articolare focale"],
+    redFlags: ["Osteoporosi grave", "Sospetta frattura", "Insufficienza vertebro-basilare", "Artrite reumatoide (fase acuta)", "Ernia discale espulsa con radicolopatia severa"],
+    fascialChain: "Catena statica posteriore, Fascia cervicale profonda",
     innervation: "Plesso cervicale, Nervi spinali C5-C6",
-    vascularization: "Arteria vertebrale, Carotide interna"
+    vascularization: "Arteria vertebrale, Sistema carotideo"
   },
   {
-    id: "2",
+    id: "osteo-002",
     title: "Rilascio Diaframmatico (Tecnica a cupola)",
-    videoUrl: "https://example.com/video-diaframma",
     district: "Torace / Addome",
-    greenFlags: ["Donne incinte (con cautela)", "Atleti", "Soggetti ansiosi", "Reflusso gastroesofageo"],
-    redFlags: ["Ernia iatale grave", "Traumi costali recenti", "Chirurgia addominale recente (< 3 mesi)"],
-    fascialChain": "Catena centrale (Core), Connessione Psoas-Diaframma",
-    innervation: "Nervo Frenico (C3-C4-C5)",
+    type: "Fasciale / Viscerale",
+    videoUrl: "https://drive.google.com/simulated-video-2",
+    duration: "5:30",
+    description: "Tecnica di rilascio miofasciale profondo per i pilastri e le cupole diaframmatiche, volta a migliorare l'escursione respiratoria e ridurre le tensioni mediastiniche.",
+    operatorPosition: "In piedi di lato al lettino, all'altezza dell'addome del paziente.",
+    patientPosition: "Supino, ginocchia flesse per detendere la muscolatura addominale.",
+    greenFlags: ["Donne incinte (con cautela)", "Atleti", "Soggetti ansiosi", "Reflusso gastroesofageo", "Disturbi respiratori funzionali"],
+    redFlags: ["Ernia iatale grave", "Traumi costali recenti", "Chirurgia addominale recente (< 3 mesi)", "Aneurisma aortico noto"],
+    fascialChain: "Catena centrale (Core), Connessione Psoas-Diaframma, Fascia endotoracica",
+    innervation: "Nervo Frenico (C3-C4-C5), Nervo Vago (X)",
     vascularization: "Arterie freniche inferiori e superiori"
   },
   {
-    id: "3",
+    id: "osteo-003",
     title: "Trattamento Psoas (Inibizione ischemica)",
-    videoUrl: "https://example.com/video-psoas",
     district: "Lombare / Bacino",
-    greenFlags: ["Lombalgia cronica", "Corridori", "Adolescenti (scoliosi lieve)"],
-    redFlags: ["Appendicite acuta", "Infezioni pelviche", "Aneurisma dell'aorta addominale", "Gravidanza avanzata"],
-    fascialChain": "Catena crociata anteriore, Connessione renale",
-    innervation: "Plesso lombare (L1-L4)",
-    vascularization: "Arterie lombari, Ramo iliaco-lombare"
+    type: "Muscolo-Energia / Punti Trigger",
+    videoUrl: "https://drive.google.com/simulated-video-3",
+    duration: "4:15",
+    description: "Inibizione manuale e allungamento del muscolo ileopsoas per alleviare le tensioni lombari e migliorare l'estensione dell'anca.",
+    operatorPosition: "In piedi al lato della disfunzione.",
+    patientPosition: "Supino, gamba controlaterale flessa, gamba omolaterale flessa e supportata dall'operatore.",
+    greenFlags: ["Lombalgia cronica", "Corridori", "Adolescenti (scoliosi lieve)", "Iperlordosi lombare"],
+    redFlags: ["Appendicite acuta", "Infezioni pelviche", "Aneurisma dell'aorta addominale", "Gravidanza avanzata", "Sospetto tumore colon-retto"],
+    fascialChain: "Catena crociata anteriore, Connessione renale, Fascia iliaca",
+    innervation: "Plesso lombare (L1-L4), Nervo Femorale",
+    vascularization: "Arterie lombari, Ramo iliaco-lombare, Arteria femorale"
+  },
+  {
+    id: "osteo-004",
+    title: "Tecnica di CV4 (Compressione 4° Ventricolo)",
+    district: "Cranio-Sacrale",
+    type: "Cranio-Sacrale",
+    videoUrl: "https://drive.google.com/simulated-video-4",
+    duration: "10:00",
+    description: "Tecnica cranio-sacrale per influenzare il fluido cerebrospinale (CSF) e i centri autonomici situati nel pavimento del quarto ventricolo. Induce uno 'still point'.",
+    operatorPosition: "Seduto a capo del lettino, avambracci appoggiati per massima stabilità.",
+    patientPosition: "Supino, occhi chiusi, rilassato.",
+    greenFlags: ["Insonnia", "Stress severo", "Emicrania/Cefalea tensiva", "Stati d'ansia", "Neonati (coliche)"],
+    redFlags: ["Emorragia intracranica recente", "Fratture craniche acute", "Aneurismi cerebrali", "Aumento pressione intracranica severa"],
+    fascialChain: "Dura madre (Core Link), Tentorio del cervelletto",
+    innervation: "Centri neurovegetativi bulbari, Nervi cranici",
+    vascularization: "Seni venosi durali, Circolo di Willis"
+  },
+  {
+    id: "osteo-005",
+    title: "Mobilizzazione Fegato e Colecisti",
+    district: "Torace / Addome",
+    type: "Viscerale",
+    videoUrl: "https://drive.google.com/simulated-video-5",
+    duration: "6:20",
+    description: "Pompage epatico e mobilizzazione per migliorare l'emodinamica epatica, il drenaggio biliare e detendere i legamenti sospensori del fegato.",
+    operatorPosition: "In piedi a destra del paziente.",
+    patientPosition: "Supino, ginocchia flesse.",
+    greenFlags: ["Congestione epatica", "Fatica cronica", "Digestione lenta", "Emicrania digestiva"],
+    redFlags: ["Epatite acuta", "Calcoli biliari in fase colica", "Cirrosi avanzata", "Cancro epatico", "Mononucleosi attiva (rischio rottura milza/fegato)"],
+    fascialChain: "Legamento falciforme, Piccolo omento, Diaframma",
+    innervation: "Plesso celiaco, Nervo Vago destro, Nervo Frenico (riferito spalla destra)",
+    vascularization: "Vena Porta, Arteria Epatica, Vene Epatiche"
+  },
+  {
+    id: "osteo-006",
+    title: "Tecnica di Spencer (Spalla)",
+    district: "Arto Superiore",
+    type: "Articolare",
+    videoUrl: "https://drive.google.com/simulated-video-6",
+    duration: "7:00",
+    description: "Sequenza di 7 stadi di mobilizzazione articolare per la spalla congelata o per restrizioni gleno-omerali severe. Migliora il ROM e il flusso linfatico.",
+    operatorPosition: "In piedi di fronte al paziente dal lato da trattare.",
+    patientPosition: "Decubito laterale sul lato sano.",
+    greenFlags: ["Capsulite adesiva", "Anziani", "Post-immobilizzazione", "Impiegati (rigidità di spalla)"],
+    redFlags: ["Lussazione acuta di spalla", "Frattura omero/clavicola/scapola", "Infezione articolare", "Rottura acuta cuffia dei rotatori"],
+    fascialChain: "Catena brachiale anteriore e posteriore",
+    innervation: "Plesso brachiale (Nervo ascellare, soprascapolare)",
+    vascularization: "Arteria ascellare, Arteria circonflessa omerale"
+  },
+  {
+    id: "osteo-007",
+    title: "Dog Technique (HVLA Toracico T4-T5)",
+    district: "Toracico",
+    type: "Strutturale (HVLA)",
+    videoUrl: "https://drive.google.com/simulated-video-7",
+    duration: "1:30",
+    description: "Manipolazione thrust in estensione/flessione per disfunzioni di gruppo o singole vertebre toraciche medie.",
+    operatorPosition: "In piedi di lato al lettino, mano caudale che fa fulcro (pistola) sotto le trasverse.",
+    patientPosition: "Supino, braccia incrociate sul petto.",
+    greenFlags: ["Dorso curvo rigido", "Dolore interscapolare", "Asma (fase non acuta)"],
+    redFlags: ["Osteoporosi", "Fratture costali", "Metastasi ossee", "Pazienti pediatrici molto piccoli"],
+    fascialChain: "Catena statica posteriore",
+    innervation: "Nervi spinali toracici, Gangli simpatici paravertebrali",
+    vascularization: "Arterie intercostali posteriori"
+  },
+  {
+    id: "osteo-008",
+    title: "Rilascio Fascia Plantare",
+    district: "Arto Inferiore",
+    type: "Fasciale",
+    videoUrl: "https://drive.google.com/simulated-video-8",
+    duration: "3:45",
+    description: "Scollamento e distensione della spessa aponeurosi plantare per fascite o spina calcaneare.",
+    operatorPosition: "Seduto ai piedi del lettino.",
+    patientPosition: "Prono con i piedi fuori dal bordo del lettino.",
+    greenFlags: ["Corridori", "Fascite plantare", "Anziani", "Lavoratori in piedi"],
+    redFlags: ["Frattura da stress calcagno", "Infezione locale (piede diabetico grave)", "Trombosi venosa profonda (rischio diffusione)"],
+    fascialChain: "Catena statica posteriore (SFL - Superficial Back Line)",
+    innervation: "Nervo tibiale (nervi plantari mediale e laterale)",
+    vascularization: "Arteria plantare mediale e laterale"
+  },
+  {
+    id: "osteo-009",
+    title: "Seni Venosi Cranici (Drenaggio)",
+    district: "Cranio-Sacrale",
+    type: "Cranio-Sacrale",
+    videoUrl: "https://drive.google.com/simulated-video-9",
+    duration: "8:00",
+    description: "Tecnica dolce di decoaptazione delle suture craniche (occipito-mastoidea, sagittale) per favorire il drenaggio venoso intracranico.",
+    operatorPosition: "Seduto a capo del paziente.",
+    patientPosition: "Supino.",
+    greenFlags: ["Sinusite", "Cefalea congestizia", "Neonati (plagiocefalia)", "Gravidanza (rinite gravidica)"],
+    redFlags: ["Trombosi del seno venoso", "Trauma cranico acuto", "Idrocefalo non shuntato"],
+    fascialChain: "Falce cerebrale, Tentorio",
+    innervation: "Nervo Trigemino (innervazione meningea)",
+    vascularization: "Seno sagittale superiore, Seno trasverso, Vena giugulare interna"
+  },
+  {
+    id: "osteo-010",
+    title: "Mobilizzazione Testa del Perone (Fibulare)",
+    district: "Arto Inferiore",
+    type: "Articolare / MET",
+    videoUrl: "https://drive.google.com/simulated-video-10",
+    duration: "2:30",
+    description: "Normalizzazione della testa del perone in anteriorità o posteriorità, utile per dolori laterali al ginocchio o caviglia.",
+    operatorPosition: "In piedi a lato della gamba da trattare.",
+    patientPosition: "Supino, ginocchio flesso a 90°.",
+    greenFlags: ["Distorsioni caviglia", "Atleti", "Sindrome bandelletta ileotibiale"],
+    redFlags: ["Frattura del perone", "Lesione acuta LCL", "Danno acuto nervo peroneo"],
+    fascialChain: "Catena laterale, Membrana interossea crurale",
+    innervation: "Nervo Peroneo comune (sciatico popliteo esterno)",
+    vascularization: "Arteria tibiale anteriore, Arteria ricorrente tibiale"
+  },
+  {
+    id: "osteo-011",
+    title: "Pompage Sacro-Iliaco",
+    district: "Lombare / Bacino",
+    type: "Articolare / Fasciale",
+    videoUrl: "https://drive.google.com/simulated-video-11",
+    duration: "4:00",
+    description: "Mobilizzazione ritmica per decongestionare l'articolazione sacro-iliaca e detendere i forti legamenti pelvici.",
+    operatorPosition: "In piedi di lato, mani sovrapposte sul sacro.",
+    patientPosition: "Prono.",
+    greenFlags: ["Donne incinte (primo trimestre o decubito laterale)", "Sciatalgia", "Anziani"],
+    redFlags: ["Spondilite anchilosante (fase acuta)", "Frattura del bacino", "Infezione sacro-iliaca"],
+    fascialChain: "Fascia toraco-lombare, Legamento sacro-tuberoso",
+    innervation: "Plesso sacrale, Nervi glutei",
+    vascularization: "Arterie glutee superiori e inferiori"
+  },
+  {
+    id: "osteo-012",
+    title: "Rilascio Sfintere di Oddi",
+    district: "Torace / Addome",
+    type: "Viscerale",
+    videoUrl: "https://drive.google.com/simulated-video-12",
+    duration: "3:15",
+    description: "Tecnica inibitoria riflessa su D2/D3 e tattile sull'addome (punto di Murphy) per rilassare lo sfintere e favorire lo svuotamento biliare.",
+    operatorPosition: "In piedi a destra del paziente.",
+    patientPosition: "Supino, ginocchia flesse.",
+    greenFlags: ["Difficoltà digestive", "Nausea post-prandiale", "Cefalea catameniale"],
+    redFlags: ["Calcolosi biliare sintomatica (colica)", "Pancreatite acuta", "Colecistite acuta"],
+    fascialChain: "Omento minore, Fascia di Toldt",
+    innervation: "Plesso Celiaco, Nervo Vago",
+    vascularization: "Arteria gastroduodenale"
+  },
+  {
+    id: "osteo-013",
+    title: "Tecnica Muscolo-Energia (MET) Quadrato dei Lombi",
+    district: "Lombare / Bacino",
+    type: "Muscolo-Energia",
+    videoUrl: "https://drive.google.com/simulated-video-13",
+    duration: "4:30",
+    description: "Uso della contrazione isometrica del paziente contro resistenza per allungare il quadrato dei lombi ipertonico.",
+    operatorPosition: "In piedi dietro al paziente (in decubito laterale).",
+    patientPosition: "Decubito laterale sul lato non doloroso, gamba superiore scende fuori dal lettino.",
+    greenFlags: ["Lombalgia acuta", "Scoliosi funzionale", "Impiegati"],
+    redFlags: ["Ernia discale acuta con radicolopatia progressiva", "Spondilolistesi instabile"],
+    fascialChain: "Fascia toracolombare",
+    innervation: "12° nervo intercostale, Plesso lombare (L1-L4)",
+    vascularization: "Arterie lombari"
+  },
+  {
+    id: "osteo-014",
+    title: "Sblocco Articolazione Temporo-Mandibolare (ATM)",
+    district: "Cranio-Sacrale",
+    type: "Articolare / Muscolo-Energia",
+    videoUrl: "https://drive.google.com/simulated-video-14",
+    duration: "5:00",
+    description: "Detensione dei muscoli masticatori (massetere, pterigoidei) e decoaptazione condilare dell'ATM per bruxismo e click articolari.",
+    operatorPosition: "Seduto a capo del lettino. Uso di guanti (tecnica intraorale parziale).",
+    patientPosition: "Supino.",
+    greenFlags: ["Bruxismo", "Cefalea muscolo-tensiva", "Acufeni", "Adolescenti (ortodonzia)"],
+    redFlags: ["Lussazione acuta ATM", "Frattura mandibolare", "Infezione dentale/ascesso"],
+    fascialChain: "Fascia cervicale superficiale, Muscolatura ioidea",
+    innervation: "Nervo Trigemino (V3 - branca mandibolare)",
+    vascularization: "Arteria mascellare, Arteria temporale superficiale"
+  },
+  {
+    id: "osteo-015",
+    title: "Rib Raising (Innalzamento Costale)",
+    district: "Toracico",
+    type: "Articolare / Fasciale / Autonomico",
+    videoUrl: "https://drive.google.com/simulated-video-15",
+    duration: "6:00",
+    description: "Mobilizzazione ritmica delle articolazioni costo-vertebrali per migliorare l'escursione toracica e inibire l'ortosimpatico iperattivo.",
+    operatorPosition: "Seduto o in piedi di lato, mani infilate sotto il torace del paziente.",
+    patientPosition: "Supino, rilassato.",
+    greenFlags: ["Polmonite (fase di recupero)", "Asma", "Stress/Ipersimpaticotonia", "Anziani", "Pazienti allettati"],
+    redFlags: ["Fratture costali", "Pneumotorace", "Metastasi vertebrali/costali", "Osteoporosi severa"],
+    fascialChain: "Fascia endotoracica, Pleura parietale",
+    innervation: "Catena Simpatica Paravertebrale, Nervi intercostali",
+    vascularization: "Arterie e vene intercostali"
   }
 ];
 
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+// Estrazione Categorie per i Filtri
+const DISTRICTS = ['Tutti', ...new Set(MOCK_DATABASE.map(item => item.district))];
+const ALL_GREEN_FLAGS = [...new Set(MOCK_DATABASE.flatMap(item => item.greenFlags))].sort();
+const ALL_RED_FLAGS = [...new Set(MOCK_DATABASE.flatMap(item => item.redFlags))].sort();
 
-  // Se non autenticato, mostra la schermata di login
+
+// ============================================================================
+// 2. MAIN APPLICATION COMPONENT
+// ============================================================================
+export default function OsteoApp() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+
+  // Simulazione caricamento iniziale
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
+    setTimeout(() => setIsLoading(false), 800);
+  }, []);
+
+  const toggleFavorite = (id) => {
+    if (favorites.includes(id)) {
+      setFavorites(favorites.filter(favId => favId !== id));
+    } else {
+      setFavorites([...favorites, id]);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center animate-pulse">
+          <Activity size={48} className="text-blue-500 mb-4" />
+          <h1 className="text-xl font-bold text-slate-700">Caricamento Database...</h1>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
   }
 
-  // Altrimenti, mostra la dashboard principale
-  return <Dashboard />;
+  return (
+    <Dashboard 
+      favorites={favorites} 
+      toggleFavorite={toggleFavorite} 
+      onLogout={() => setIsAuthenticated(false)} 
+    />
+  );
 }
 
-// --- COMPONENTE: SCHERMATA DI ACCESSO ---
+
+// ============================================================================
+// 3. LOGIN SCREEN COMPONENT
+// ============================================================================
 function LoginScreen({ onLogin }) {
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (password === 'osteo2026') {
+    if (password === 'admin') { // Password richiesta dal prompt
+      setError(false);
       onLogin();
     } else {
-      setError('Password errata. Riprova.');
+      setError(true);
       setPassword('');
+      setTimeout(() => setError(false), 2000);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 space-y-6">
-        <div className="text-center">
-          <div className="mx-auto bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-            <Lock size={32} />
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      
+      {/* Background Decorativo */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-[100px] opacity-30 animate-blob animation-delay-2000"></div>
+
+      <div className="max-w-md w-full bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8 z-10">
+        <div className="text-center mb-8">
+          <div className="mx-auto bg-blue-500/20 w-20 h-20 rounded-2xl flex items-center justify-center mb-4 border border-blue-500/30 shadow-inner">
+            <Stethoscope size={36} className="text-blue-400" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Archivio Clinico</h1>
-          <p className="text-slate-500 mt-2 text-sm">Inserisci la password per accedere al database delle tecniche.</p>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Osteo<span className="text-blue-400">Base</span></h1>
+          <p className="text-slate-300 mt-2 text-sm">Archivio Clinico Tecniche & Esercizi</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Lock className={`h-5 w-5 ${error ? 'text-red-400' : 'text-slate-400'}`} />
+            </div>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password..."
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Inserisci password..."
+              className={`block w-full pl-11 pr-4 py-4 bg-white/5 border ${error ? 'border-red-500 focus:ring-red-500' : 'border-white/10 focus:ring-blue-500'} rounded-xl text-white placeholder-slate-400 focus:outline-none focus:bg-white/10 focus:ring-2 transition-all`}
             />
-            {error && <p className="text-red-500 text-sm mt-2 text-center font-medium">{error}</p>}
           </div>
+          
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors shadow-md hover:shadow-lg"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] transform hover:-translate-y-0.5"
           >
             Accedi al Database
           </button>
         </form>
+
+        {error && (
+          <div className="mt-6 flex items-center justify-center text-red-400 space-x-2 animate-bounce">
+            <AlertOctagon size={16} />
+            <span className="text-sm font-medium">Password errata. Riprova.</span>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-// --- COMPONENTE: DASHBOARD (Ricerca e Lista) ---
-function Dashboard() {
+
+// ============================================================================
+// 4. DASHBOARD COMPONENT (Main UI)
+// ============================================================================
+function Dashboard({ favorites, toggleFavorite, onLogout }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('Tutti');
-  const [expandedCardId, setExpandedCardId] = useState(null);
+  const [selectedGreenFlag, setSelectedGreenFlag] = useState('');
+  const [selectedRedFlag, setSelectedRedFlag] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
-  // Estrai i distretti univoci dal database per il menu a tendina
-  const districts = useMemo(() => {
-    const allDistricts = mockDatabase.map(tech => tech.district);
-    return ['Tutti', ...new Set(allDistricts)];
-  }, []);
+  const [expandedId, setExpandedId] = useState(null);
 
-  // Filtra i dati in base alla ricerca testuale e al distretto selezionato
-  const filteredTechniques = useMemo(() => {
-    return mockDatabase.filter(tech => {
-      const matchesSearch = tech.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            tech.greenFlags.some(flag => flag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            tech.redFlags.some(flag => flag.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesDistrict = selectedDistrict === 'Tutti' || tech.district === selectedDistrict;
-      return matchesSearch && matchesDistrict;
+  // LOGICA DI FILTRAGGIO AVANZATA
+  const filteredData = useMemo(() => {
+    return MOCK_DATABASE.filter(tech => {
+      const matchSearch = tech.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          tech.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchDistrict = selectedDistrict === 'Tutti' || tech.district === selectedDistrict;
+      const matchGreen = selectedGreenFlag === '' || tech.greenFlags.includes(selectedGreenFlag);
+      const matchRed = selectedRedFlag === '' || tech.redFlags.includes(selectedRedFlag);
+      const matchFav = showFavoritesOnly ? favorites.includes(tech.id) : true;
+
+      return matchSearch && matchDistrict && matchGreen && matchRed && matchFav;
     });
-  }, [searchQuery, selectedDistrict]);
-
-  const toggleExpand = (id) => {
-    setExpandedCardId(prev => prev === id ? null : id);
-  };
+  }, [searchQuery, selectedDistrict, selectedGreenFlag, selectedRedFlag, showFavoritesOnly, favorites]);
 
   return (
-    <div className="min-h-screen bg-slate-100 font-sans pb-12">
-      {/* Header Fisso */}
-      <header className="bg-white shadow-sm sticky top-0 z-20">
-        <div className="max-w-4xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <Activity className="text-blue-600" />
-            OsteoApp Database
-          </h1>
+    <div className="min-h-screen bg-[#f4f7fb] font-sans pb-20">
+      
+      {/* HEADER NAVBAR */}
+      <header className="bg-white shadow-sm sticky top-0 z-40">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-1.5 rounded-lg">
+              <Stethoscope className="text-white" size={24} />
+            </div>
+            <h1 className="text-xl font-extrabold text-slate-800 tracking-tight hidden sm:block">
+              Osteo<span className="text-blue-600">Base</span>
+            </h1>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${showFavoritesOnly ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+            >
+              <Heart size={16} className={showFavoritesOnly ? 'fill-current' : ''} />
+              <span className="hidden sm:inline">Preferiti</span>
+              {favorites.length > 0 && <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{favorites.length}</span>}
+            </button>
+            <button onClick={onLogout} className="text-slate-400 hover:text-slate-600 transition-colors p-2">
+              <User size={20} />
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
         
-        {/* Barra di Ricerca e Filtri */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm mb-6 flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-400" />
-            </div>
-            <input
-              type="text"
-              placeholder="Cerca tecnica, indicazione..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl leading-5 bg-slate-50 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm"
-            />
-          </div>
-          
-          <div className="relative min-w-[200px]">
-            <select
-              value={selectedDistrict}
-              onChange={(e) => setSelectedDistrict(e.target.value)}
-              className="block w-full pl-3 pr-10 py-3 border border-slate-200 rounded-xl leading-5 bg-slate-50 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all sm:text-sm appearance-none"
-            >
-              {districts.map(district => (
-                <option key={district} value={district}>{district}</option>
-              ))}
-            </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <ChevronDown className="h-4 w-4 text-slate-400" />
-            </div>
-          </div>
+        {/* TITOLO PAGINA */}
+        <div className="mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">Database Tecniche</h2>
+          <p className="text-slate-500 mt-2">Consulta filtri incrociati, indicazioni cliniche e catene miofasciali.</p>
         </div>
 
-        {/* Lista Tecniche */}
-        <div className="space-y-4">
-          {filteredTechniques.length > 0 ? (
-            filteredTechniques.map(technique => (
-              <TechniqueCard 
-                key={technique.id} 
-                technique={technique} 
-                isExpanded={expandedCardId === technique.id}
-                onToggle={() => toggleExpand(technique.id)}
+        {/* SEARCH & FILTER BAR */}
+        <div className="bg-white p-2 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] mb-8">
+          <div className="flex flex-col md:flex-row gap-2">
+            
+            {/* Main Search Input */}
+            <div className="relative flex-1">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-slate-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Cerca tecnica, sintomo o muscolo..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-11 pr-4 py-4 bg-transparent text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-0 sm:text-base font-medium"
               />
-            ))
-          ) : (
-            <div className="text-center py-12 bg-white rounded-2xl shadow-sm">
-              <p className="text-slate-500">Nessuna tecnica trovata per i criteri selezionati.</p>
+            </div>
+
+            {/* Quick District Filter */}
+            <div className="hidden md:flex border-l border-slate-100 items-center px-2">
+              <select
+                value={selectedDistrict}
+                onChange={(e) => setSelectedDistrict(e.target.value)}
+                className="bg-transparent text-slate-600 font-medium py-2 px-4 focus:outline-none cursor-pointer"
+              >
+                {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+              </select>
+            </div>
+
+            {/* Advanced Filters Toggle */}
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className={`flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold transition-all ${showFilters ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}
+            >
+              <Filter size={18} />
+              <span className="hidden sm:inline">Filtri Avanzati</span>
+            </button>
+          </div>
+
+          {/* ADVANCED FILTERS PANEL */}
+          {showFilters && (
+            <div className="border-t border-slate-100 mt-2 p-4 grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 rounded-b-2xl">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <CheckCircle size={14} className="text-green-500" /> Green Flags (Indicato per)
+                </label>
+                <select 
+                  value={selectedGreenFlag} 
+                  onChange={(e) => setSelectedGreenFlag(e.target.value)}
+                  className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none shadow-sm"
+                >
+                  <option value="">Qualsiasi indicazione</option>
+                  {ALL_GREEN_FLAGS.map(f => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                  <ShieldAlert size={14} className="text-red-500" /> Red Flags (Controindicazioni)
+                </label>
+                <select 
+                  value={selectedRedFlag} 
+                  onChange={(e) => setSelectedRedFlag(e.target.value)}
+                  className="w-full p-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none shadow-sm"
+                >
+                  <option value="">Nessun filtro controindicazioni</option>
+                  {ALL_RED_FLAGS.map(f => <option key={f} value={f}>Pazienti con: {f}</option>)}
+                </select>
+              </div>
             </div>
           )}
         </div>
 
+        {/* RESULTS COUNT */}
+        <div className="flex items-center justify-between mb-4 px-1">
+          <p className="text-sm font-medium text-slate-500">
+            Trovate <span className="text-slate-800 font-bold">{filteredData.length}</span> tecniche
+          </p>
+        </div>
+
+        {/* TECHNIQUES LIST */}
+        <div className="space-y-4">
+          {filteredData.length > 0 ? (
+            filteredData.map(tech => (
+              <TechniqueCard 
+                key={tech.id} 
+                technique={tech} 
+                isExpanded={expandedId === tech.id}
+                onToggle={() => setExpandedId(expandedId === tech.id ? null : tech.id)}
+                isFavorite={favorites.includes(tech.id)}
+                onFavoriteToggle={() => toggleFavorite(tech.id)}
+              />
+            ))
+          ) : (
+            <div className="bg-white rounded-3xl p-12 text-center shadow-sm border border-slate-100">
+              <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="text-slate-400" size={32} />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">Nessuna tecnica trovata</h3>
+              <p className="text-slate-500 mt-2">Prova a modificare i filtri o i termini di ricerca.</p>
+              <button 
+                onClick={() => {setSearchQuery(''); setSelectedDistrict('Tutti'); setSelectedGreenFlag(''); setSelectedRedFlag('');}}
+                className="mt-6 px-6 py-2 bg-blue-50 text-blue-600 font-semibold rounded-full hover:bg-blue-100 transition-colors"
+              >
+                Resetta Filtri
+              </button>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
 }
 
-// --- COMPONENTE: SCHEDA TECNICA (Card Espandibile) ---
-function TechniqueCard({ technique, isExpanded, onToggle }) {
-  return (
-    <div className={`bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300 ${isExpanded ? 'ring-2 ring-blue-500/20' : 'hover:shadow-md'}`}>
-      
-      {/* Header cliccabile */}
-      <button 
-        onClick={onToggle}
-        className="w-full px-5 py-4 flex items-center justify-between text-left focus:outline-none"
-      >
-        <div className="flex-1 pr-4">
-          <span className="inline-block px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full mb-2">
-            {technique.district}
-          </span>
-          <h2 className="text-lg font-bold text-slate-800 leading-tight">
-            {technique.title}
-          </h2>
-        </div>
-        <div className="flex-shrink-0 bg-slate-50 p-2 rounded-full text-slate-400">
-          {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-        </div>
-      </button>
 
-      {/* Contenuto Espanso */}
-      {isExpanded && (
-        <div className="px-5 pb-6 border-t border-slate-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+// ============================================================================
+// 5. TECHNIQUE CARD COMPONENT (Master/Detail UI)
+// ============================================================================
+function TechniqueCard({ technique, isExpanded, onToggle, isFavorite, onFavoriteToggle }) {
+  return (
+    <div className={`bg-white rounded-2xl shadow-sm border transition-all duration-300 overflow-hidden ${isExpanded ? 'border-blue-200 ring-4 ring-blue-50/50 shadow-md' : 'border-slate-100 hover:border-slate-200 hover:shadow-md'}`}>
+      
+      {/* HEADER DELLA CARD (Sempre Visibile) */}
+      <div className="p-5 sm:p-6 cursor-pointer select-none group" onClick={onToggle}>
+        <div className="flex justify-between items-start gap-4">
           
-          {/* Video Placeholder (Simulazione Iframe Google Drive) */}
-          <div className="w-full aspect-video bg-slate-900 rounded-xl mb-6 relative flex items-center justify-center overflow-hidden group cursor-pointer shadow-inner">
-            {/* Immagine di sfondo simulata */}
-            <div className="absolute inset-0 opacity-40 bg-gradient-to-tr from-blue-900 to-slate-800" />
-            <div className="relative z-10 flex flex-col items-center text-white/80 group-hover:text-white transition-colors">
-              <PlayCircle size={48} className="mb-2 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
-              <span className="text-sm font-medium tracking-wide">Riproduci da Google Drive</span>
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              <span className="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-bold rounded-md tracking-wide">
+                {technique.district}
+              </span>
+              <span className="inline-flex items-center px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-md tracking-wide">
+                {technique.type}
+              </span>
+              <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-500 ml-2">
+                <Clock size={12} /> {technique.duration}
+              </span>
+            </div>
+            
+            <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-tight">
+              {technique.title}
+            </h3>
+            
+            {!isExpanded && (
+              <p className="text-slate-500 text-sm mt-2 line-clamp-1">
+                {technique.description}
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col items-center gap-3">
+            <button 
+              onClick={(e) => { e.stopPropagation(); onFavoriteToggle(); }}
+              className={`p-2 rounded-full transition-colors ${isFavorite ? 'bg-red-50 text-red-500' : 'bg-slate-50 text-slate-300 hover:bg-slate-100 hover:text-red-400'}`}
+            >
+              <Heart size={22} className={isFavorite ? 'fill-current' : ''} />
+            </button>
+            <div className={`p-2 rounded-full transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-blue-50 text-blue-600' : 'bg-slate-50 text-slate-400'}`}>
+              <ChevronDown size={20} />
             </div>
           </div>
 
-          {/* RED FLAGS - Massima Evidenza Visiva */}
-          {technique.redFlags && technique.redFlags.length > 0 && (
-            <div className="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-r-xl">
-              <div className="flex items-start">
-                <AlertTriangle className="text-red-600 mt-0.5 mr-3 flex-shrink-0" size={20} />
-                <div>
-                  <h3 className="text-red-800 font-bold mb-2">RED FLAGS (Controindicazioni)</h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    {technique.redFlags.map((flag, index) => (
-                      <li key={index} className="text-red-700 text-sm font-medium">{flag}</li>
-                    ))}
-                  </ul>
+        </div>
+
+        {/* Anteprima Red Flags se non espanso e ci sono red flags gravi (per sicurezza clinica) */}
+        {!isExpanded && technique.redFlags.length > 0 && (
+          <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-red-600 bg-red-50 inline-flex px-2 py-1 rounded-md">
+            <ShieldAlert size={14} /> Contiene Controindicazioni
+          </div>
+        )}
+      </div>
+
+      {/* DETTAGLIO ESPANSO DELLA CARD */}
+      {isExpanded && (
+        <div className="border-t border-slate-100 bg-white">
+          
+          {/* SEZIONE 1: IL VIDEO */}
+          <div className="p-5 sm:p-6 bg-slate-900 relative">
+            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900 via-slate-900 to-black pointer-events-none"></div>
+            
+            <div className="w-full aspect-video bg-black/40 rounded-xl relative flex items-center justify-center border border-white/10 group cursor-pointer overflow-hidden backdrop-blur-sm">
+              <div className="absolute inset-0 bg-blue-600/10 group-hover:bg-blue-600/20 transition-colors"></div>
+              
+              <div className="text-center z-10 flex flex-col items-center transform transition-transform group-hover:scale-105">
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center mb-3 shadow-lg group-hover:bg-blue-600/90 transition-colors border border-white/20">
+                  <PlayCircle size={32} className="text-white ml-1" />
                 </div>
+                <span className="text-white font-medium text-sm tracking-widest uppercase">Riproduci Video</span>
+                <span className="text-slate-400 text-xs mt-1">Google Drive Sicuro</span>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* GREEN FLAGS - Badges */}
-          {technique.greenFlags && technique.greenFlags.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-slate-500 mb-3 flex items-center uppercase tracking-wider">
-                <CheckCircle size={16} className="mr-1.5 text-green-500" />
-                Indicato per (Green Flags)
-              </h3>
+          <div className="p-5 sm:p-6 space-y-8">
+            
+            {/* SEZIONE 2: RED FLAGS (MASSIMA EVIDENZA CLINICA) */}
+            {technique.redFlags && technique.redFlags.length > 0 && (
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-5 shadow-[0_0_15px_rgba(239,68,68,0.15)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 rounded-full -mr-10 -mt-10 blur-xl"></div>
+                <h4 className="flex items-center text-red-700 font-extrabold text-lg mb-3 uppercase tracking-wide">
+                  <AlertTriangle className="mr-2 animate-pulse" size={24} /> 
+                  Red Flags / Non Indicato
+                </h4>
+                <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 relative z-10">
+                  {technique.redFlags.map((flag, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-red-800/90 font-semibold text-sm">
+                      <X size={16} className="mt-0.5 flex-shrink-0 text-red-500" />
+                      {flag}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* SEZIONE 3: GREEN FLAGS */}
+            <div>
+              <h4 className="flex items-center text-slate-700 font-bold text-sm uppercase tracking-wider mb-3 border-b border-slate-100 pb-2">
+                <CheckCircle className="mr-2 text-green-500" size={18} /> 
+                Green Flags / Indicazioni
+              </h4>
               <div className="flex flex-wrap gap-2">
-                {technique.greenFlags.map((flag, index) => (
-                  <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                {technique.greenFlags.map((flag, idx) => (
+                  <span key={idx} className="inline-flex items-center px-3 py-1.5 bg-green-50 border border-green-100 text-green-700 rounded-lg text-sm font-medium">
                     {flag}
                   </span>
                 ))}
               </div>
             </div>
-          )}
 
-          {/* Dettagli Anatomici e Clinici (Griglia) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 rounded-xl p-4">
-            
-            <div className="flex items-start gap-3">
-              <GitCommit className="text-indigo-500 mt-1 flex-shrink-0" size={18} />
-              <div>
-                <span className="block text-xs font-semibold text-slate-500 uppercase">Catena Fasciale</span>
-                <span className="text-sm text-slate-800 font-medium">{technique.fascialChain}</span>
+            {/* SEZIONE 4: DESCRIZIONE & POSIZIONAMENTO */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <BookOpen size={14} /> Descrizione Esecuzione
+                  </h4>
+                  <p className="text-slate-700 text-sm leading-relaxed font-medium">
+                    {technique.description}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-slate-50 rounded-xl p-4 space-y-4 border border-slate-100">
+                <div>
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Posizione Paziente</h4>
+                  <p className="text-slate-800 text-sm font-medium">{technique.patientPosition}</p>
+                </div>
+                <div className="w-full h-px bg-slate-200"></div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Posizione Operatore</h4>
+                  <p className="text-slate-800 text-sm font-medium">{technique.operatorPosition}</p>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <Target className="text-amber-500 mt-1 flex-shrink-0" size={18} />
-              <div>
-                <span className="block text-xs font-semibold text-slate-500 uppercase">Innervazione</span>
-                <span className="text-sm text-slate-800 font-medium">{technique.innervation}</span>
-              </div>
-            </div>
+            {/* SEZIONE 5: ANATOMIA E RETI */}
+            <div className="bg-[#f8faff] border border-blue-100 rounded-xl p-5">
+              <h4 className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-4 border-b border-blue-100 pb-2">
+                Riferimenti Anatomici
+              </h4>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                
+                <div className="flex gap-3">
+                  <div className="bg-indigo-100 p-2 rounded-lg h-min">
+                    <GitCommit className="text-indigo-600" size={18} />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-500 uppercase mb-0.5">Catena Fasciale</h5>
+                    <p className="text-sm font-semibold text-slate-800">{technique.fascialChain}</p>
+                  </div>
+                </div>
 
-            <div className="flex items-start gap-3">
-              <Droplet className="text-rose-500 mt-1 flex-shrink-0" size={18} />
-              <div>
-                <span className="block text-xs font-semibold text-slate-500 uppercase">Vascolarizzazione</span>
-                <span className="text-sm text-slate-800 font-medium">{technique.vascularization}</span>
+                <div className="flex gap-3">
+                  <div className="bg-amber-100 p-2 rounded-lg h-min">
+                    <Target className="text-amber-600" size={18} />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-500 uppercase mb-0.5">Innervazione</h5>
+                    <p className="text-sm font-semibold text-slate-800">{technique.innervation}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="bg-rose-100 p-2 rounded-lg h-min">
+                    <Droplet className="text-rose-600" size={18} />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-bold text-slate-500 uppercase mb-0.5">Vascolarizzazione</h5>
+                    <p className="text-sm font-semibold text-slate-800">{technique.vascularization}</p>
+                  </div>
+                </div>
+
               </div>
             </div>
 
           </div>
-
         </div>
       )}
     </div>
